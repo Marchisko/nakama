@@ -1,1 +1,3 @@
-flask\nsupabase\ngunicorn\n
+flask
+supabase
+gunicorn
