@@ -1,12 +1,21 @@
 import os
+import requests as req
 from flask import Flask, jsonify, request
-from supabase import create_client
 
 app = Flask(__name__)
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
-SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
-supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
+HEADERS = {
+    "apikey": SUPABASE_KEY,
+    "Authorization": f"Bearer {SUPABASE_KEY}",
+    "Content-Type": "application/json"
+}
+
+def supabase_get(table, params=""):
+    url = f"{SUPABASE_URL}/rest/v1/{table}?{params}"
+    r = req.get(url, headers=HEADERS)
+    return r.json()
 
 @app.route("/")
 def health():
@@ -14,28 +23,9 @@ def health():
 
 @app.route("/api/cards")
 def get_cards():
+    params = []
     name = request.args.get("name")
     set_id = request.args.get("set_id")
     rarity = request.args.get("rarity")
-    page = int(request.args.get("page", 1))
-    limit = int(request.args.get("limit", 50))
-    offset = (page - 1) * limit
-    q = supabase.table("cards").select("*", count="exact")
-    if name: q = q.ilike("name", f"%{name}%")
-    if set_id: q = q.eq("set_id", set_id)
-    if rarity: q = q.eq("rarity", rarity)
-    res = q.range(offset, offset + limit - 1).execute()
-    return jsonify({"cards": res.data, "total": res.count})
-
-@app.route("/api/cards/<card_id>")
-def get_card(card_id):
-    res = supabase.table("cards").select("*").eq("id", card_id).single().execute()
-    return jsonify(res.data)
-
-@app.route("/api/sets")
-def get_sets():
-    res = supabase.table("sets").select("*").order("id").execute()
-    return jsonify(res.data)
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 3000)))
+    limit = request.args.get("limit", "50")
+    offset = request.args.get("offse
