@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OPItem — One Piece Card Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--gold:#c9a84c;--gold-light:#e8c56d;--red:#c0392b;--dark:#0a0710;--dark2:#110e1a;--dark3:#1a1528;--dark4:#241e38;--border:rgba(201,168,76,0.15);--text:#e8e0d0;--muted:#7a7090;--green:#22c55e;--pink:#ec4899;--ebay-blue:#0064d2;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--dark);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse at 20% 0%,rgba(192,57,43,0.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 100%,rgba(201,168,76,0.06) 0%,transparent 60%);pointer-events:none;}
+
+  .header{position:sticky;top:0;z-index:50;background:rgba(10,7,16,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 16px;}
+  .header-inner{max-width:800px;margin:0 auto;display:flex;align-items:center;gap:12px;height:56px;}
+  .logo{font-family:'Cinzel',serif;font-size:17px;font-weight:900;color:var(--gold);letter-spacing:.05em;white-space:nowrap;text-shadow:0 0 20px rgba(201,168,76,.4);}
+  .logo span{color:var(--red);}
+  .search-wrap{flex:1;position:relative;}
+  .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;}
+  .search-input{width:100%;background:var(--dark3);border:1px solid var(--border);border-radius:24px;padding:9px 16px 9px 36px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;}
+  .search-input:focus{border-color:rgba(201,168,76,.4);}
+  .search-input::placeholder{color:var(--muted);}
+
+  .page{display:none;position:relative;z-index:1;padding-bottom:80px;}
+  .page.active{display:block;}
+
+  .filters{display:flex;gap:6px;padding:10px 16px;overflow-x:auto;border-bottom:1px solid var(--border);background:var(--dark2);scrollbar-width:none;}
+  .filters::-webkit-scrollbar{display:none;}
+  .chip{background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 14px;border-radius:20px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;transition:all .2s;}
+  .chip:hover{border-color:var(--gold);color:var(--gold);}
+  .chip.active{background:var(--gold);border-color:var(--gold);color:#000;font-weight:600;}
+
+  .stats-bar{padding:8px 16px;font-size:12px;color:var(--muted);background:var(--dark2);border-bottom:1px solid var(--border);}
+  .stats-bar span{color:var(--gold-light);font-weight:600;}
+
+  .grid-wrap{padding:12px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;max-width:800px;margin:0 auto;}
+
+  .card{background:var(--dark3);border-radius:10px;overflow:hidden;cursor:pointer;border:1px solid var(--border);transition:transform .18s,border-color .18s,box-shadow .18s;animation:fadeIn .3s ease both;}
+  .card:hover{transform:translateY(-3px) scale(1.02);border-color:rgba(201,168,76,.4);box-shadow:0 8px 24px rgba(0,0,0,.4);}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .card-img-wrap{position:relative;aspect-ratio:6/8.5;background:var(--dark4);overflow:hidden;}
+  .card-img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .3s;}
+  .card-img.loaded{opacity:1;}
+  .card-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:28px;}
+  .rarity-banner{position:absolute;top:0;left:0;right:0;height:3px;}
+  .r-Leader{background:linear-gradient(90deg,#7c3aed,#a855f7);}
+  .r-SecretRare{background:linear-gradient(90deg,#c0392b,#e74c3c);}
+  .r-SuperRare{background:linear-gradient(90deg,#b45309,#f59e0b);}
+  .r-Rare{background:linear-gradient(90deg,#1d4ed8,#3b82f6);}
+  .r-Uncommon{background:linear-gradient(90deg,#065f46,#10b981);}
+  .r-Common{background:#374151;}
+  .r-Special{background:linear-gradient(90deg,#be185d,#ec4899);}
+  .r-Promo{background:linear-gradient(90deg,#c9a84c,#e8c56d);}
+  .card-body{padding:7px 8px 8px;}
+  .card-name{font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;}
+  .card-sub{display:flex;align-items:center;justify-content:space-between;margin-top:3px;}
+  .card-set{font-size:10px;color:var(--muted);}
+  .color-dots{display:flex;gap:2px;}
+  .dot{width:6px;height:6px;border-radius:50%;}
+  .in-coll-badge{position:absolute;bottom:6px;right:6px;background:var(--green);color:#000;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;}
+  .in-wish-badge{position:absolute;top:8px;right:6px;font-size:16px;}
+
+  .state-msg{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted);}
+  .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .load-more-wrap{text-align:center;padding:16px;}
+  .load-more-btn{background:transparent;border:1px solid var(--border);color:var(--gold);padding:10px 28px;border-radius:24px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .2s;}
+  .load-more-btn:hover{background:var(--gold);color:#000;}
+
+  /* Modal */
+  .modal-overlay{display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);justify-content:center;align-items:flex-end;}
+  .modal-overlay.open{display:flex;animation:overlayIn .2s ease;}
+  @keyframes overlayIn{from{opacity:0}to{opacity:1}}
+  .modal-sheet{background:var(--dark2);border-radius:20px 20px 0 0;width:100%;max-width:480px;border-top:1px solid var(--border);animation:sheetUp .3s cubic-bezier(.34,1.56,.64,1);max-height:92vh;overflow-y:auto;}
+  @keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0;}
+  .modal-card-img{width:55%;max-width:220px;display:block;margin:16px auto 0;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.6);}
+  .modal-info{padding:16px 20px 32px;}
+  .modal-name{font-family:'Cinzel',serif;font-size:17px;color:var(--gold);font-weight:700;text-align:center;}
+  .modal-badges{display:flex;justify-content:center;gap:6px;margin-top:8px;flex-wrap:wrap;}
+  .badge{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid;}
+  .badge-rarity{border-color:rgba(201,168,76,.3);color:var(--gold-light);background:rgba(201,168,76,.08);}
+  .badge-set{border-color:var(--border);color:var(--muted);}
+  .modal-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px;}
+  .stat-box{background:var(--dark3);border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border);}
+  .stat-val{font-size:16px;font-weight:700;}
+  .stat-lbl{font-size:10px;color:var(--muted);margin-top:2px;}
+  .modal-section-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:16px 0 6px;}
+  .modal-effect{font-size:13px;color:#b0a8c0;line-height:1.6;}
+  .modal-trigger{font-size:12px;color:var(--gold-light);margin-top:8px;font-style:italic;}
+
+  .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px;}
+  .add-btn{padding:13px;background:var(--gold);border:none;color:#000;border-radius:12px;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:700;cursor:pointer;transition:all .2s;}
+  .add-btn:hover{background:var(--gold-light);}
+  .add-btn.added{background:var(--green);color:#fff;}
+  .wish-btn{padding:13px;background:transparent;border:1px solid var(--border);color:var(--text);border-radius:12px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .2s;}
+  .wish-btn:hover{border-color:var(--pink);color:var(--pink);}
+  .wish-btn.wished{background:var(--pink);border-color:var(--pink);color:#fff;}
+
+  .market-links{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
+  .cm-link{display:block;text-align:center;color:var(--muted);font-size:12px;text-decoration:none;padding:10px;border:1px solid var(--border);border-radius:12px;transition:all .2s;}
+  .cm-link:hover{color:var(--gold);border-color:var(--gold);}
+  .ebay-link{display:block;text-align:center;color:#85b4f0;font-size:12px;text-decoration:none;padding:10px;border:1px solid rgba(0,100,210,0.25);border-radius:12px;background:rgba(0,100,210,0.06);transition:all .2s;}
+  .ebay-link:hover{color:#fff;border-color:var(--ebay-blue);background:rgba(0,100,210,0.18);}
+
+  .modal-close-btn{width:100%;margin-top:8px;padding:13px;background:var(--dark4);border:1px solid var(--border);color:var(--text);border-radius:12px;font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer;}
+
+  /* Collection page */
+  .page-inner{padding:16px;max-width:800px;margin:0 auto;}
+  .portfolio-card{background:linear-gradient(135deg,var(--dark3),var(--dark4));border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;}
+  .portfolio-title{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+  .portfolio-value{font-family:'Cinzel',serif;font-size:32px;font-weight:900;color:var(--gold);margin-top:4px;}
+  .portfolio-sub{font-size:12px;color:var(--muted);margin-top:4px;}
+  .portfolio-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px;}
+  .p-stat{background:rgba(0,0,0,.3);border-radius:8px;padding:10px;text-align:center;}
+  .p-stat-val{font-size:18px;font-weight:700;}
+  .p-stat-lbl{font-size:10px;color:var(--muted);margin-top:2px;}
+
+  .list-item{display:flex;align-items:center;gap:12px;background:var(--dark3);border-radius:12px;padding:10px;margin-bottom:8px;border:1px solid var(--border);cursor:pointer;transition:border-color .2s;}
+  .list-item:hover{border-color:rgba(201,168,76,.3);}
+  .list-thumb{width:44px;height:62px;border-radius:6px;object-fit:cover;background:var(--dark4);flex-shrink:0;}
+  .list-info{flex:1;min-width:0;}
+  .list-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .list-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+  .list-right{text-align:right;flex-shrink:0;}
+  .list-qty{font-size:18px;font-weight:700;color:var(--gold);}
+  .list-qty-lbl{font-size:10px;color:var(--muted);}
+  .list-remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:4px;margin-top:4px;display:block;margin-left:auto;}
+  .list-remove:hover{color:var(--red);}
+
+  /* Wishlist page */
+  .wish-item{display:flex;align-items:center;gap:12px;background:var(--dark3);border-radius:12px;padding:10px;margin-bottom:8px;border:1px solid rgba(236,72,153,0.2);cursor:pointer;transition:border-color .2s;}
+  .wish-item:hover{border-color:rgba(236,72,153,0.4);}
+  .wish-cm-btn{display:inline-block;margin-top:6px;font-size:11px;color:var(--gold);text-decoration:none;border:1px solid var(--border);padding:3px 10px;border-radius:10px;}
+
+  .empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+  .empty-icon{font-size:48px;margin-bottom:12px;}
+  .empty-title{font-size:16px;color:var(--text);font-weight:600;margin-bottom:6px;}
+  .empty-sub{font-size:13px;line-height:1.5;}
+
+  .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:40;background:rgba(10,7,16,.97);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:8px 0 max(8px,env(safe-area-inset-bottom));}
+  .nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 20px;cursor:pointer;transition:opacity .2s;}
+  .nav-icon{font-size:20px;}
+  .nav-label{font-size:10px;color:var(--muted);}
+  .nav-item.active .nav-label{color:var(--gold);}
+  .nav-item.active .nav-icon{filter:drop-shadow(0 0 6px var(--gold));}
+
+  .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--dark3);border:1px solid var(--border);border-radius:24px;padding:10px 20px;font-size:13px;opacity:0;transition:all .3s;z-index:200;white-space:nowrap;pointer-events:none;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .scan-btn{background:transparent;border:1px solid var(--border);color:var(--gold);width:36px;height:36px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;}
+  .scan-btn:hover{background:var(--gold);color:#000;}
+  .scan-overlay{display:none;position:fixed;inset:0;z-index:150;background:#000;flex-direction:column;}
+  .scan-overlay.open{display:flex;}
+  .scan-video{width:100%;flex:1;object-fit:cover;}
+  .scan-ui{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
+  .scan-frame{width:260px;height:180px;border:2px solid var(--gold);border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,.6);position:relative;}
+  .scan-hint{margin-top:20px;color:#fff;font-size:13px;background:rgba(0,0,0,.6);padding:8px 16px;border-radius:20px;text-align:center;}
+  .scan-status{position:absolute;top:60px;left:50%;transform:translateX(-50%);color:#fff;font-size:14px;font-weight:600;background:rgba(0,0,0,.7);padding:8px 20px;border-radius:20px;text-align:center;min-width:200px;}
+  .scan-close{position:absolute;top:20px;right:20px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.2);color:#fff;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;pointer-events:all;}
+  .scan-capture{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);background:var(--gold);border:none;color:#000;padding:14px 32px;border-radius:24px;font-size:14px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;pointer-events:all;}
+
+  /* Profil */
+  .rarity-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .rarity-bar-label{font-size:11px;color:var(--muted);width:80px;flex-shrink:0;}
+  .rarity-bar-track{flex:1;height:8px;background:var(--dark4);border-radius:4px;overflow:hidden;}
+  .rarity-bar-fill{height:100%;border-radius:4px;transition:width .6s ease;}
+  .rarity-bar-count{font-size:11px;color:var(--text);font-weight:600;width:28px;text-align:right;flex-shrink:0;}
+  .top-card-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer;}
+  .top-card-row:hover .top-card-name{color:var(--gold);}
+  .top-card-thumb{width:36px;height:50px;border-radius:5px;object-fit:cover;background:var(--dark4);flex-shrink:0;}
+  .top-card-info{flex:1;min-width:0;}
+  .top-card-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .top-card-meta{font-size:10px;color:var(--muted);margin-top:2px;}
+  .set-progress-row{margin-bottom:12px;}
+  .set-progress-header{display:flex;justify-content:space-between;margin-bottom:4px;}
+  .set-progress-name{font-size:12px;font-weight:600;}
+  .set-progress-pct{font-size:11px;color:var(--gold);}
+  .set-progress-track{height:6px;background:var(--dark4);border-radius:3px;overflow:hidden;}
+  .set-progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));border-radius:3px;transition:width .6s ease;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="logo">OP<span>Item</span></div>
+    <div class="search-wrap" id="searchWrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" type="text" placeholder="Chercher une carte..." id="searchInput" oninput="onSearch()">
+    </div>
+    <button class="scan-btn" onclick="openScan()" title="Scanner une carte">📷</button>
+  </div>
+</div>
+
+<!-- CARTES -->
+<div class="page active" id="pageCards">
+  <div class="filters" id="rarityFilters">
+    <button class="chip active" onclick="setRarity(null,this)">Tout</button>
+    <button class="chip" onclick="setRarity('Leader',this)">Leader</button>
+    <button class="chip" onclick="setRarity('SecretRare',this)">Secret Rare</button>
+    <button class="chip" onclick="setRarity('SuperRare',this)">Super Rare</button>
+    <button class="chip" onclick="setRarity('Rare',this)">Rare</button>
+    <button class="chip" onclick="setRarity('Uncommon',this)">Uncommon</button>
+    <button class="chip" onclick="setRarity('Common',this)">Common</button>
+    <button class="chip" onclick="setRarity('Special',this)">Special</button>
+  </div>
+  <div class="filters" id="setFilters" style="border-top:1px solid rgba(201,168,76,0.06);">
+    <button class="chip active" onclick="setSet(null,this)">Tous sets</button>
+    <button class="chip" onclick="setSet('OP-01',this)">OP-01</button>
+    <button class="chip" onclick="setSet('OP-02',this)">OP-02</button>
+    <button class="chip" onclick="setSet('OP-03',this)">OP-03</button>
+    <button class="chip" onclick="setSet('OP-04',this)">OP-04</button>
+    <button class="chip" onclick="setSet('OP-05',this)">OP-05</button>
+    <button class="chip" onclick="setSet('OP-06',this)">OP-06</button>
+    <button class="chip" onclick="setSet('OP-07',this)">OP-07</button>
+    <button class="chip" onclick="setSet('OP-08',this)">OP-08</button>
+    <button class="chip" onclick="setSet('OP-09',this)">OP-09</button>
+    <button class="chip" onclick="setSet('OP-10',this)">OP-10</button>
+    <button class="chip" onclick="setSet('OP-11',this)">OP-11</button>
+    <button class="chip" onclick="setSet('OP-12',this)">OP-12</button>
+    <button class="chip" onclick="setSet('ST-01',this)">ST-01</button>
+    <button class="chip" onclick="setSet('ST-02',this)">ST-02</button>
+    <button class="chip" onclick="setSet('ST-03',this)">ST-03</button>
+    <button class="chip" onclick="setSet('ST-04',this)">ST-04</button>
+    <button class="chip" onclick="setSet('ST-05',this)">ST-05</button>
+    <button class="chip" onclick="setSet('ST-06',this)">ST-06</button>
+  </div>
+  <div class="stats-bar" id="statsBar">Chargement...</div>
+  <div class="grid-wrap">
+    <div class="grid" id="grid"><div class="state-msg"><div class="spinner"></div><p>Chargement...</p></div></div>
+  </div>
+  <div class="load-more-wrap" id="loadMoreWrap" style="display:none">
+    <button class="load-more-btn" onclick="loadMore()">Charger plus</button>
+  </div>
+</div>
+
+<!-- COLLECTION -->
+<div class="page" id="pageCollection">
+  <div class="page-inner">
+    <div class="portfolio-card">
+      <div class="portfolio-title">Ma Collection</div>
+      <div class="portfolio-value" id="portfolioValue">— €</div>
+      <div class="portfolio-sub" id="portfolioSub">Ajoute des cartes pour suivre ta collection</div>
+      <div class="portfolio-stats">
+        <div class="p-stat"><div class="p-stat-val" id="statTotal">0</div><div class="p-stat-lbl">Cartes</div></div>
+        <div class="p-stat"><div class="p-stat-val" id="statUnique">0</div><div class="p-stat-lbl">Uniques</div></div>
+        <div class="p-stat"><div class="p-stat-val" id="statSets">0</div><div class="p-stat-lbl">Sets</div></div>
+      </div>
+    </div>
+    <div id="collectionList"></div>
+  </div>
+</div>
+
+<!-- WISHLIST -->
+<div class="page" id="pageWishlist">
+  <div class="page-inner">
+    <div class="portfolio-card" style="background:linear-gradient(135deg,#1a0a1a,#241238);">
+      <div class="portfolio-title">Ma Wishlist</div>
+      <div class="portfolio-value" style="font-size:24px;" id="wishCount">0 cartes</div>
+      <div class="portfolio-sub">Cartes que tu veux acquérir</div>
+    </div>
+    <div id="wishlistList"></div>
+  </div>
+</div>
+
+<!-- PROFIL -->
+<div class="page" id="pageProfil">
+  <div class="page-inner">
+    <!-- Header valeur -->
+    <div class="portfolio-card" style="background:linear-gradient(135deg,#0d0a1f,#1a1035);border-color:rgba(201,168,76,0.25);">
+      <div class="portfolio-title">Ma Collection</div>
+      <div class="portfolio-value" id="profilValue">— €</div>
+      <div class="portfolio-sub" id="profilValueSub">Valeur estimée · prix à venir</div>
+      <div class="portfolio-stats" style="margin-top:16px;">
+        <div class="p-stat"><div class="p-stat-val" id="profilTotal">0</div><div class="p-stat-lbl">Cartes</div></div>
+        <div class="p-stat"><div class="p-stat-val" id="profilUnique">0</div><div class="p-stat-lbl">Uniques</div></div>
+        <div class="p-stat"><div class="p-stat-val" id="profilSets">0</div><div class="p-stat-lbl">Sets</div></div>
+      </div>
+    </div>
+
+    <!-- Répartition par rareté -->
+    <div class="portfolio-card" style="margin-top:12px;">
+      <div class="portfolio-title" style="margin-bottom:12px;">Répartition par rareté</div>
+      <div id="profilRarityBars"></div>
+    </div>
+
+    <!-- Top cartes rares -->
+    <div class="portfolio-card" style="margin-top:12px;">
+      <div class="portfolio-title" style="margin-bottom:12px;">Cartes les plus rares</div>
+      <div id="profilTopCards"></div>
+    </div>
+
+    <!-- Complétion par set -->
+    <div class="portfolio-card" style="margin-top:12px;">
+      <div class="portfolio-title" style="margin-bottom:12px;">Progression par set</div>
+      <div id="profilSetProgress"></div>
+    </div>
+
+    <!-- Wishlist résumé -->
+    <div class="portfolio-card" style="margin-top:12px;background:linear-gradient(135deg,#1a0a1a,#241238);border-color:rgba(236,72,153,0.2);">
+      <div class="portfolio-title" style="margin-bottom:4px;">Wishlist</div>
+      <div id="profilWishSummary" style="font-size:13px;color:var(--muted);"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal" onclick="handleModalClick(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <img class="modal-card-img" id="mImg" src="">
+    <div class="modal-info">
+      <div class="modal-name" id="mName"></div>
+      <div class="modal-badges" id="mBadges"></div>
+      <div class="modal-stats" id="mStats"></div>
+      <div class="modal-section-title" id="mEffectTitle" style="display:none">Effet</div>
+      <div class="modal-effect" id="mEffect"></div>
+      <div class="modal-trigger" id="mTrigger"></div>
+      <div class="modal-actions">
+        <button class="add-btn" id="addBtn" onclick="toggleCollection()">+ Collection</button>
+        <button class="wish-btn" id="wishBtn" onclick="toggleWishlist()">❤️ Wishlist</button>
+      </div>
+      <div class="market-links">
+        <a class="cm-link" id="cmLink" href="#" target="_blank">🔗 Cardmarket</a>
+        <a class="ebay-link" id="ebayLink" href="#" target="_blank">🛒 Ventes eBay</a>
+      </div>
+      <button class="modal-close-btn" onclick="closeModal()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- SCAN -->
+<div class="scan-overlay" id="scanOverlay">
+  <video class="scan-video" id="scanVideo" autoplay playsinline muted></video>
+  <canvas id="scanCanvas" style="display:none"></canvas>
+  <div class="scan-ui">
+    <div class="scan-frame"></div>
+    <div class="scan-hint">Centre le numéro de carte dans le cadre<br>puis appuie sur Scanner</div>
+  </div>
+  <div class="scan-status" id="scanStatus">Prêt à scanner</div>
+  <button class="scan-close" onclick="closeScan()">✕</button>
+  <button class="scan-capture" onclick="captureAndScan()">📷 Scanner</button>
+</div>
+
+<div class="bottom-nav">
+  <div class="nav-item active" onclick="switchPage('Cards',this)"><div class="nav-icon">🃏</div><div class="nav-label">Cartes</div></div>
+  <div class="nav-item" onclick="switchPage('Collection',this)"><div class="nav-icon">📦</div><div class="nav-label">Collection</div></div>
+  <div class="nav-item" onclick="switchPage('Wishlist',this)"><div class="nav-icon">❤️</div><div class="nav-label">Wishlist</div></div>
+  <div class="nav-item" onclick="switchPage('Profil',this)"><div class="nav-icon">👤</div><div class="nav-label">Profil</div></div>
+</div>
+
+<script>
+const SB_URL="https://wrwtkpymlkzytassycww.supabase.co";
+const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indyd3RrcHltbGt6eXRhc3N5Y3d3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MTI3OTEsImV4cCI6MjA5NTk4ODc5MX0.z6SE6kRTKqtYpc7BBDfO9mfxQVi0Ol1FsrZlHzD4i3g";
+const LIMIT=60;
+const COLORS={Red:'#ef4444',Blue:'#3b82f6',Green:'#22c55e',Yellow:'#eab308',Purple:'#a855f7',Black:'#9ca3af'};
+
+let st={rarity:null,set:null,search:'',offset:0,total:0};
+let currentCard=null;
+let searchTimer=null;
+let collection=JSON.parse(localStorage.getItem('opitem_collection')||'{}');
+let wishlist=JSON.parse(localStorage.getItem('opitem_wishlist')||'{}');
+
+function save(){
+  localStorage.setItem('opitem_collection',JSON.stringify(collection));
+  localStorage.setItem('opitem_wishlist',JSON.stringify(wishlist));
+}
+
+function cardData(c){
+  return {id:c.id,name:c.name,set_id:c.set_id,rarity:c.rarity,image_url:c.image_url,colors:c.colors};
+}
+
+function buildEbayUrl(card){
+  // Construit une recherche eBay ciblée : nom de la carte + set_id + "One Piece TCG"
+  const query=`One Piece TCG ${card.set_id||''} ${card.name||''}`.trim();
+  const encoded=encodeURIComponent(query);
+  // LH_Sold=1 & LH_Complete=1 = ventes terminées uniquement
+  return `https://www.ebay.fr/sch/i.html?_nkw=${encoded}&LH_Sold=1&LH_Complete=1&_sop=13`;
+}
+
+async function fetchCards(append=false){
+  let params=[`limit=${LIMIT}`,`offset=${st.offset}`,`order=id`];
+  if(st.search) params.push(`name=ilike.*${encodeURIComponent(st.search)}*`);
+  if(st.rarity) params.push(`rarity=eq.${st.rarity}`);
+  if(st.set) params.push(`set_id=eq.${st.set}`);
+  const r=await fetch(`${SB_URL}/rest/v1/cards?${params.join('&')}`,{
+    headers:{"apikey":SB_KEY,"Authorization":`Bearer ${SB_KEY}`,"Prefer":"count=exact"}
+  });
+  const total=parseInt(r.headers.get('content-range')?.split('/')[1]||'0');
+  st.total=total;
+  const cards=await r.json();
+  renderCards(cards,append);
+  const shown=document.querySelectorAll('.card').length;
+  document.getElementById('statsBar').innerHTML=`<span>${shown}</span> / <span>${total}</span> cartes`;
+  document.getElementById('loadMoreWrap').style.display=(shown<total&&cards.length===LIMIT)?'block':'none';
+}
+
+function renderCards(cards,append){
+  const grid=document.getElementById('grid');
+  if(!append){
+    if(!cards.length){grid.innerHTML='<div class="state-msg"><p>Aucune carte trouvée</p></div>';return;}
+    grid.innerHTML='';
+  }
+  cards.forEach((c,i)=>{
+    const el=document.createElement('div');
+    el.className='card';
+    el.style.animationDelay=`${(i%20)*.02}s`;
+    const colors=(c.colors||[]).map(col=>`<span class="dot" style="background:${COLORS[col]||'#888'}"></span>`).join('');
+    const collBadge=collection[c.id]?`<div class="in-coll-badge">×${collection[c.id].qty}</div>`:'';
+    const wishBadge=wishlist[c.id]?`<div class="in-wish-badge">❤️</div>`:'';
+    el.innerHTML=`
+      <div class="card-img-wrap">
+        <div class="rarity-banner r-${c.rarity||'Common'}"></div>
+        <div class="card-placeholder">🃏</div>
+        <img class="card-img" src="${c.image_url}" onload="this.classList.add('loaded')" onerror="this.style.display='none'">
+        ${collBadge}${wishBadge}
+      </div>
+      <div class="card-body">
+        <div class="card-name">${c.name||'—'}</div>
+        <div class="card-sub"><span class="card-set">${c.set_id||''}</span><div class="color-dots">${colors}</div></div>
+      </div>`;
+    el.onclick=()=>openModal(c);
+    grid.appendChild(el);
+  });
+}
+
+function loadMore(){st.offset+=LIMIT;fetchCards(true);}
+function setRarity(val,btn){
+  st.rarity=val;st.offset=0;
+  document.querySelectorAll('#rarityFilters .chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  fetchCards();
+}
+function setSet(val,btn){
+  st.set=val;st.offset=0;
+  document.querySelectorAll('#setFilters .chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  fetchCards();
+}
+function onSearch(){
+  clearTimeout(searchTimer);
+  searchTimer=setTimeout(()=>{st.search=document.getElementById('searchInput').value;st.offset=0;fetchCards();},350);
+}
+
+function openModal(c){
+  currentCard=c;
+  document.getElementById('mImg').src=c.image_url||'';
+  document.getElementById('mName').textContent=c.name||'—';
+  const badges=[
+    `<span class="badge badge-rarity">${c.rarity||''}</span>`,
+    `<span class="badge badge-set">${c.set_id||''}</span>`,
+    ...(c.colors||[]).map(col=>`<span class="badge" style="border-color:${COLORS[col]||'#888'}33;color:${COLORS[col]||'#888'}">${col}</span>`)
+  ];
+  document.getElementById('mBadges').innerHTML=badges.join('');
+  document.getElementById('mStats').innerHTML=[
+    {val:c.cost??'—',lbl:'Coût'},
+    {val:c.power?(c.power/1000)+'k':'—',lbl:'Puissance'},
+    {val:c.counter??'—',lbl:'Counter'}
+  ].map(s=>`<div class="stat-box"><div class="stat-val">${s.val}</div><div class="stat-lbl">${s.lbl}</div></div>`).join('');
+  const hasEffect=c.effect&&c.effect.trim();
+  document.getElementById('mEffectTitle').style.display=hasEffect?'block':'none';
+  document.getElementById('mEffect').textContent=c.effect||'';
+  document.getElementById('mTrigger').textContent=c.trigger?`⚡ Trigger: ${c.trigger}`:'';
+  document.getElementById('cmLink').href=`https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=${encodeURIComponent(c.name||'')}`;
+  document.getElementById('ebayLink').href=buildEbayUrl(c);
+  updateModalBtns();
+  document.getElementById('modal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function updateModalBtns(){
+  const addBtn=document.getElementById('addBtn');
+  const wishBtn=document.getElementById('wishBtn');
+  if(!currentCard)return;
+  if(collection[currentCard.id]){addBtn.textContent=`✓ ×${collection[currentCard.id].qty}`;addBtn.className='add-btn added';}
+  else{addBtn.textContent='+ Collection';addBtn.className='add-btn';}
+  if(wishlist[currentCard.id]){wishBtn.textContent='❤️ Wishlisted';wishBtn.className='wish-btn wished';}
+  else{wishBtn.textContent='❤️ Wishlist';wishBtn.className='wish-btn';}
+}
+
+function toggleCollection(){
+  if(!currentCard)return;
+  if(collection[currentCard.id]){collection[currentCard.id].qty++;showToast(`+1 · ${currentCard.name} (×${collection[currentCard.id].qty})`);}
+  else{collection[currentCard.id]={qty:1,card:cardData(currentCard)};showToast(`✓ ${currentCard.name} ajouté !`);}
+  save();updateModalBtns();renderCollectionPage();
+}
+
+function toggleWishlist(){
+  if(!currentCard)return;
+  if(wishlist[currentCard.id]){delete wishlist[currentCard.id];showToast('Retiré de la wishlist');}
+  else{wishlist[currentCard.id]={card:cardData(currentCard),addedAt:Date.now()};showToast(`❤️ ${currentCard.name} en wishlist !`);}
+  save();updateModalBtns();renderWishlistPage();
+}
+
+function closeModal(){
+  document.getElementById('modal').classList.remove('open');
+  document.body.style.overflow='';
+  fetchCards();
+}
+function handleModalClick(e){if(e.target.id==='modal')closeModal();}
+
+// Collection page
+function renderCollectionPage(){
+  const items=Object.values(collection);
+  const totalQty=items.reduce((s,i)=>s+i.qty,0);
+  const sets=new Set(items.map(i=>i.card.set_id)).size;
+  document.getElementById('statTotal').textContent=totalQty;
+  document.getElementById('statUnique').textContent=items.length;
+  document.getElementById('statSets').textContent=sets;
+  document.getElementById('portfolioSub').textContent=items.length?`${items.length} cartes uniques · ${sets} sets`:'Ajoute des cartes pour suivre ta collection';
+  const list=document.getElementById('collectionList');
+  if(!items.length){
+    list.innerHTML=`<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-title">Collection vide</div><div class="empty-sub">Parcours les cartes et appuie sur<br>"+ Collection"</div></div>`;
+    return;
+  }
+  list.innerHTML=items.map(item=>`
+    <div class="list-item" onclick="openModal(${JSON.stringify(item.card).replace(/"/g,'&quot;')})">
+      <img class="list-thumb" src="${item.card.image_url||''}" onerror="this.style.opacity=0">
+      <div class="list-info">
+        <div class="list-name">${item.card.name||'—'}</div>
+        <div class="list-meta">${item.card.set_id||''} · ${item.card.rarity||''}</div>
+      </div>
+      <div class="list-right">
+        <div class="list-qty">${item.qty}</div>
+        <div class="list-qty-lbl">copie${item.qty>1?'s':''}</div>
+        <button class="list-remove" onclick="removeCollection(event,'${item.card.id}')">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+function removeCollection(e,id){
+  e.stopPropagation();
+  delete collection[id];
+  save();renderCollectionPage();showToast('Retiré de la collection');
+}
+
+// Wishlist page
+function renderWishlistPage(){
+  const items=Object.values(wishlist);
+  document.getElementById('wishCount').textContent=`${items.length} carte${items.length>1?'s':''}`;
+  const list=document.getElementById('wishlistList');
+  if(!items.length){
+    list.innerHTML=`<div class="empty-state"><div class="empty-icon">❤️</div><div class="empty-title">Wishlist vide</div><div class="empty-sub">Appuie sur ❤️ Wishlist sur une carte<br>pour l'ajouter ici</div></div>`;
+    return;
+  }
+  list.innerHTML=items.map(item=>`
+    <div class="wish-item" onclick="openModal(${JSON.stringify(item.card).replace(/"/g,'&quot;')})">
+      <img class="list-thumb" src="${item.card.image_url||''}" onerror="this.style.opacity=0">
+      <div class="list-info">
+        <div class="list-name">${item.card.name||'—'}</div>
+        <div class="list-meta">${item.card.set_id||''} · ${item.card.rarity||''}</div>
+        <a class="wish-cm-btn" href="https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=${encodeURIComponent(item.card.name||'')}" target="_blank" onclick="event.stopPropagation()">🔗 Cardmarket</a>
+      </div>
+      <button class="list-remove" onclick="removeWish(event,'${item.card.id}')">🗑</button>
+    </div>`).join('');
+}
+
+function removeWish(e,id){
+  e.stopPropagation();
+  delete wishlist[id];
+  save();renderWishlistPage();showToast('Retiré de la wishlist');
+}
+
+function switchPage(page,navEl){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page'+page).classList.add('active');
+  navEl.classList.add('active');
+  document.getElementById('searchWrap').style.display=page==='Cards'?'block':'none';
+  if(page==='Collection')renderCollectionPage();
+  if(page==='Wishlist')renderWishlistPage();
+  if(page==='Profil')renderProfilPage();
+}
+
+const RARITY_ORDER=['Leader','SecretRare','SuperRare','Rare','Uncommon','Common','Special'];
+const RARITY_COLORS={'Leader':'#a855f7','SecretRare':'#ef4444','SuperRare':'#f59e0b','Rare':'#3b82f6','Uncommon':'#10b981','Common':'#6b7280','Special':'#ec4899'};
+const RARITY_LABELS={'Leader':'Leader','SecretRare':'Secret Rare','SuperRare':'Super Rare','Rare':'Rare','Uncommon':'Uncommon','Common':'Common','Special':'Special'};
+
+async function renderProfilPage(){
+  const items=Object.values(collection);
+  const totalQty=items.reduce((s,i)=>s+i.qty,0);
+  const sets=new Set(items.map(i=>i.card.set_id));
+
+  document.getElementById('profilTotal').textContent=totalQty;
+  document.getElementById('profilUnique').textContent=items.length;
+  document.getElementById('profilSets').textContent=sets.size;
+
+  // Répartition par rareté
+  const rarityCounts={};
+  items.forEach(i=>{const r=i.card.rarity||'Common';rarityCounts[r]=(rarityCounts[r]||0)+i.qty;});
+  const maxCount=Math.max(...Object.values(rarityCounts),1);
+  const rarityBars=document.getElementById('profilRarityBars');
+  rarityBars.innerHTML=RARITY_ORDER.filter(r=>rarityCounts[r]).map(r=>`
+    <div class="rarity-bar-row">
+      <div class="rarity-bar-label">${RARITY_LABELS[r]}</div>
+      <div class="rarity-bar-track"><div class="rarity-bar-fill" style="width:${Math.round(rarityCounts[r]/maxCount*100)}%;background:${RARITY_COLORS[r]};"></div></div>
+      <div class="rarity-bar-count">${rarityCounts[r]}</div>
+    </div>`).join('');
+
+  // Top cartes rares
+  const rarityRank={'SecretRare':0,'Leader':1,'SuperRare':2,'Special':3,'Rare':4,'Uncommon':5,'Common':6};
+  const topCards=items.sort((a,b)=>(rarityRank[a.card.rarity]??9)-(rarityRank[b.card.rarity]??9)).slice(0,5);
+  document.getElementById('profilTopCards').innerHTML=topCards.length?topCards.map(item=>`
+    <div class="top-card-row" onclick="openModal(${JSON.stringify(item.card).replace(/"/g,'&quot;')})">
+      <img class="top-card-thumb" src="${item.card.image_url||''}" onerror="this.style.opacity=0">
+      <div class="top-card-info">
+        <div class="top-card-name">${item.card.name||'—'}</div>
+        <div class="top-card-meta">${item.card.set_id||''} · ${RARITY_LABELS[item.card.rarity]||item.card.rarity||''}</div>
+      </div>
+      <span class="badge badge-rarity" style="font-size:10px;">${RARITY_LABELS[item.card.rarity]||''}</span>
+    </div>`).join('')
+    :'<div style="color:var(--muted);font-size:13px;">Aucune carte dans ta collection</div>';
+
+  // Progression par set — on récupère le total par set depuis Supabase
+  const setProgress=document.getElementById('profilSetProgress');
+  if(!items.length){setProgress.innerHTML='<div style="color:var(--muted);font-size:13px;">Aucune carte dans ta collection</div>';return;}
+  const setIds=[...sets];
+  const ownedBySet={};
+  items.forEach(i=>{const s=i.card.set_id;ownedBySet[s]=(ownedBySet[s]||0)+1;});
+  // Récupérer le total de chaque set
+  const setTotals={};
+  await Promise.all(setIds.map(async s=>{
+    const r=await fetch(`${SB_URL}/rest/v1/cards?set_id=eq.${s}&select=id`,{
+      headers:{"apikey":SB_KEY,"Authorization":`Bearer ${SB_KEY}`,"Prefer":"count=exact","Range":"0-0"}
+    });
+    setTotals[s]=parseInt(r.headers.get('content-range')?.split('/')[1]||'0');
+  }));
+  setProgress.innerHTML=setIds.sort().map(s=>{
+    const owned=ownedBySet[s]||0;
+    const total=setTotals[s]||0;
+    const pct=total?Math.round(owned/total*100):0;
+    return `<div class="set-progress-row">
+      <div class="set-progress-header"><span class="set-progress-name">${s}</span><span class="set-progress-pct">${owned}/${total} · ${pct}%</span></div>
+      <div class="set-progress-track"><div class="set-progress-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+
+  // Wishlist résumé
+  const wishItems=Object.values(wishlist);
+  document.getElementById('profilWishSummary').innerHTML=wishItems.length
+    ?`<span style="color:var(--pink);font-size:22px;font-weight:700;">${wishItems.length}</span> carte${wishItems.length>1?'s':''} sur ta wishlist`
+    :'Aucune carte sur ta wishlist';
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+fetchCards();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
+<script>
+let scanStream=null;
+let tesseractWorker=null;
+
+async function openScan(){
+  const overlay=document.getElementById('scanOverlay');
+  overlay.classList.add('open');
+  document.getElementById('scanStatus').textContent='Démarrage caméra...';
+  try{
+    scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}});
+    document.getElementById('scanVideo').srcObject=scanStream;
+    document.getElementById('scanStatus').textContent='Prêt à scanner';
+  }catch(e){
+    document.getElementById('scanStatus').textContent='Caméra non disponible';
+  }
+  if(!tesseractWorker){
+    tesseractWorker=await Tesseract.createWorker('eng');
+    await tesseractWorker.setParameters({tessedit_char_whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_p'});
+  }
+}
+
+function closeScan(){
+  if(scanStream)scanStream.getTracks().forEach(t=>t.stop());
+  scanStream=null;
+  document.getElementById('scanOverlay').classList.remove('open');
+}
+
+async function captureAndScan(){
+  const video=document.getElementById('scanVideo');
+  const canvas=document.getElementById('scanCanvas');
+  const status=document.getElementById('scanStatus');
+  status.textContent='Analyse en cours...';
+  canvas.width=video.videoWidth;
+  canvas.height=video.videoHeight;
+  const ctx=canvas.getContext('2d');
+  ctx.drawImage(video,0,0);
+  // Crop la zone centrale (le cadre de scan)
+  const cx=canvas.width/2,cy=canvas.height/2;
+  const cw=Math.min(500,canvas.width*0.7),ch=Math.min(300,canvas.height*0.4);
+  const imageData=canvas.toDataURL('image/png');
+  try{
+    const {data:{text}}=await tesseractWorker.recognize(imageData);
+    const cleaned=text.toUpperCase().replace(/\s/g,'');
+    // Chercher pattern type OP01-001, ST01-001, EB01-001 etc.
+    const match=cleaned.match(/([A-Z]{2}\d{2}[-_][A-Z]?\d{3}[a-zA-Z]?\d?)/);
+    if(match){
+      const cardId=match[1].replace('_','-');
+      status.textContent=`Carte détectée: ${cardId}`;
+      await searchCardById(cardId);
+    } else {
+      status.textContent='Numéro non détecté — réessaie';
+    }
+  }catch(e){
+    status.textContent='Erreur OCR — réessaie';
+  }
+}
+
+async function searchCardById(cardId){
+  const status=document.getElementById('scanStatus');
+  status.textContent=`Recherche ${cardId}...`;
+  // Chercher d'abord exact, puis avec variantes
+  const variants=[cardId, cardId+'_p1', cardId.replace('-','')];
+  for(const id of variants){
+    const r=await fetch(`${SB_URL}/rest/v1/cards?id=eq.${encodeURIComponent(id)}&limit=1`,{
+      headers:{"apikey":SB_KEY,"Authorization":`Bearer ${SB_KEY}`}
+    });
+    const cards=await r.json();
+    if(cards.length){
+      closeScan();
+      openModal(cards[0]);
+      showToast(`✓ ${cards[0].name} trouvée !`);
+      return;
+    }
+  }
+  // Essai recherche partielle
+  const r=await fetch(`${SB_URL}/rest/v1/cards?id=ilike.*${encodeURIComponent(cardId.split('-').slice(0,2).join('-'))}*&limit=5`,{
+    headers:{"apikey":SB_KEY,"Authorization":`Bearer ${SB_KEY}`}
+  });
+  const cards=await r.json();
+  if(cards.length){
+    closeScan();
+    openModal(cards[0]);
+    showToast(`✓ ${cards[0].name} trouvée !`);
+  } else {
+    status.textContent=`Carte "${cardId}" introuvable — réessaie`;
+  }
+}
+</script>
+</body>
+</html>
