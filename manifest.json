@@ -1,12 +1,14 @@
 {
-  "name": "OPItem — One Piece Card Tracker",
-  "short_name": "OPItem",
-  "description": "Suis ta collection de cartes One Piece TCG",
+  "name": "Nakama — One Piece Card Tracker",
+  "short_name": "Nakama",
+  "description": "Track your One Piece TCG collection. Browse 3000+ cards, manage your wishlist, and follow market prices.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#060412",
-  "theme_color": "#060412",
   "orientation": "portrait",
+  "background_color": "#1a1a2e",
+  "theme_color": "#1a1a2e",
+  "lang": "fr",
+  "categories": ["games", "entertainment"],
   "icons": [
     {
       "src": "/icon-192.png",
@@ -19,6 +21,42 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-1.png",
+      "sizes": "1290x2796",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Browse all One Piece TCG cards"
+    },
+    {
+      "src": "/screenshot-2.png",
+      "sizes": "1290x2796",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Manage your collection"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mes cartes",
+      "short_name": "Cartes",
+      "url": "/?page=cards",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Ma collection",
+      "short_name": "Collection",
+      "url": "/?page=collection",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
