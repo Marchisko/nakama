@@ -53,8 +53,11 @@ body::before{display:none;}
 
 /* ===== PAGE HERO ===== */
 .page-hero--img{padding:0;text-align:left;background:none;}
-.page-hero-img-wrap{position:relative;width:100%;height:280px;overflow:hidden;background:#b8956a;}
-.page-hero-img{width:100%;height:100%;object-fit:contain;object-position:center center;display:block;}
+.page-hero-img-wrap{position:relative;width:100%;overflow:hidden;background:#b8956a;}
+.page-hero-img{width:100%;height:auto;display:block;}
+@media(max-width:600px){
+  .page-hero-img{height:200px;object-fit:cover;object-position:20% center;}
+}
 .page-hero-img-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(26,26,46,0.15) 0%,rgba(26,26,46,0.55) 100%);}
 .page-hero-content{position:absolute;bottom:14px;left:16px;right:16px;pointer-events:none;}
 .page-hero--img .page-hero-eyebrow{color:rgba(255,255,255,.7);font-size:9px;}
