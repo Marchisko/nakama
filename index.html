@@ -227,6 +227,7 @@ body::before{display:none;}
 .set-progress-track{height:5px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;}
 .set-progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));border-radius:3px;transition:width .7s ease;}
 
+.profil-empty{font-size:12px;color:var(--text-dim);text-align:center;padding:12px 0;font-style:italic;}
 .premium-teaser{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#1a1a2e,#0f0f1a);border:1px solid rgba(232,197,109,0.25);border-radius:16px;padding:18px;margin:12px 0 80px;cursor:pointer;transition:border-color .2s;}
 .premium-teaser:hover{border-color:rgba(232,197,109,0.5);}
 .premium-teaser-eyebrow{font-size:9px;color:var(--gold-light);letter-spacing:.15em;text-transform:uppercase;margin-bottom:4px;}
@@ -898,12 +899,13 @@ async function renderProfilPage(){
   const rarityCounts={};
   items.forEach(i=>{const r=i.card.rarity||'Common';rarityCounts[r]=(rarityCounts[r]||0)+i.qty;});
   const maxCount=Math.max(...Object.values(rarityCounts),1);
+  const emptyState = (msg) => `<div class="profil-empty">${msg}</div>`;
   document.getElementById('profilRarityBars').innerHTML=RARITY_ORDER.filter(r=>rarityCounts[r]).map(r=>`
     <div class="rarity-bar-row">
       <div class="rarity-bar-label">${RARITY_LABELS[r]}</div>
       <div class="rarity-bar-track"><div class="rarity-bar-fill" style="width:${Math.round(rarityCounts[r]/maxCount*100)}%;background:${RARITY_COLORS[r]};"></div></div>
       <div class="rarity-bar-count">${rarityCounts[r]}</div>
-    </div>`).join('') || '<div style="color:var(--text-dim);font-size:13px;">Aucune carte</div>';
+    </div>`).join('') || emptyState('Ajoute des cartes pour voir la répartition');
   const rarityRank={'SecretRare':0,'Leader':1,'SuperRare':2,'Special':3,'Rare':4,'Uncommon':5,'Common':6};
   const topCards=[...items].sort((a,b)=>(rarityRank[a.card.rarity]??9)-(rarityRank[b.card.rarity]??9)).slice(0,5);
   document.getElementById('profilTopCards').innerHTML=topCards.length?topCards.map(item=>`
@@ -915,9 +917,9 @@ async function renderProfilPage(){
       </div>
       <span class="badge badge-rarity" style="font-size:9.5px;">${RARITY_LABELS[item.card.rarity]||''}</span>
     </div>`).join('')
-    :'<div style="color:var(--text-dim);font-size:13px;">Aucune carte dans ta collection</div>';
+    : emptyState('Tes cartes les plus rares apparaîtront ici');
   const setProgress=document.getElementById('profilSetProgress');
-  if(!items.length){setProgress.innerHTML='<div style="color:var(--text-dim);font-size:13px;">Aucune carte</div>';
+  if(!items.length){setProgress.innerHTML=emptyState('Ajoute des cartes pour suivre ta progression');
   }else{
     const setIds=[...sets];
     const ownedBySet={};
@@ -940,7 +942,7 @@ async function renderProfilPage(){
   const wishItems=Object.values(wishlist);
   document.getElementById('profilWishSummary').innerHTML=wishItems.length
     ?`<span style="color:var(--pink);font-size:22px;font-weight:700;">${wishItems.length}</span> carte${wishItems.length>1?'s':''} sur ta wishlist`
-    :'Aucune carte sur ta wishlist';
+    : emptyState('Ajoute des cartes à ta wishlist');
 }
 
 function switchPage(page,navEl){
