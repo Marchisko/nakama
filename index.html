@@ -1555,8 +1555,10 @@ function renderPriceDisplay(){
   const label = isEN ? 'Anglais' : 'Japonais';
 
   // Bloc loose (prix de base — toutes les cartes)
+  // On cache le loose si il est supérieur au gradé (données PriceCharting incohérentes)
+  const looseValid = looseUSD && (!gradedUSD || looseUSD <= gradedUSD);
   let looseBlock = '';
-  if(looseUSD){
+  if(looseValid){
     const looseEUR = (looseUSD * EUR_RATE).toFixed(2);
     looseBlock = `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;${gradedUSD ? 'border-bottom:1px solid var(--border);' : ''}">
