@@ -1508,23 +1508,28 @@ function handlePremium(plan){
 
 let currentPriceLang = 'EN';
 let currentPriceData = null;
-const EUR_RATE = 0.92; // Taux USD→EUR approximatif
+let currentPriceHistory = [];
+const EUR_RATE = 0.92;
 
 async function loadCardPrice(cardId){
   const wrap = document.getElementById('priceChartWrap');
   wrap.innerHTML = '<div class="price-chart-empty"><div class="price-chart-icon">⏳</div><div class="price-chart-msg">Chargement...</div></div>';
   try {
-    const r = await fetch(`${SB_URL}/rest/v1/prices?card_id=eq.${cardId}&select=*`, {
+    // Prix actuel
+    const r1 = await fetch(`${SB_URL}/rest/v1/prices?card_id=eq.${cardId}&select=*`, {
       headers: {"apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`}
     });
-    const data = await r.json();
-    if(data && data.length > 0){
-      currentPriceData = data[0];
-    } else {
-      currentPriceData = null;
-    }
+    const priceData = await r1.json();
+    currentPriceData = priceData && priceData.length > 0 ? priceData[0] : null;
+
+    // Historique
+    const r2 = await fetch(`${SB_URL}/rest/v1/price_history?card_id=eq.${cardId}&select=recorded_at,price_en_usd,price_jp_usd&order=recorded_at.asc&limit=30`, {
+      headers: {"apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`}
+    });
+    currentPriceHistory = await r2.json() || [];
   } catch(e){
     currentPriceData = null;
+    currentPriceHistory = [];
   }
   renderPriceDisplay();
 }
@@ -1549,11 +1554,43 @@ function renderPriceDisplay(){
   }
   const priceEUR = (priceUSD * EUR_RATE).toFixed(2);
   const updated = currentPriceData.last_updated ? new Date(currentPriceData.last_updated).toLocaleDateString('fr-FR') : '—';
+
+  // Graphique historique
+  const histKey = currentPriceLang === 'EN' ? 'price_en_usd' : 'price_jp_usd';
+  const histData = currentPriceHistory.filter(h => h[histKey]);
+  let chartHtml = '';
+  if(histData.length > 1){
+    const prices = histData.map(h => h[histKey]);
+    const maxP = Math.max(...prices);
+    const minP = Math.min(...prices);
+    const range = maxP - minP || 1;
+    const bars = histData.map((h, i) => {
+      const pct = Math.round(((h[histKey] - minP) / range) * 70 + 10);
+      const isLast = i === histData.length - 1;
+      const date = new Date(h.recorded_at).toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'});
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:default;" title="${(h[histKey]*EUR_RATE).toFixed(2)}€ · ${date}">
+        <div style="width:100%;background:${isLast?'var(--navy)':'rgba(26,26,46,.25)'};border-radius:3px 3px 0 0;height:${pct}px;transition:height .3s;"></div>
+      </div>`;
+    }).join('');
+    const firstDate = new Date(histData[0].recorded_at).toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'});
+    const lastDate = new Date(histData[histData.length-1].recorded_at).toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'});
+    const trend = prices[prices.length-1] >= prices[0] ? `<span style="color:var(--green)">↑</span>` : `<span style="color:var(--red)">↓</span>`;
+    chartHtml = `
+      <div style="display:flex;align-items:flex-end;gap:2px;height:80px;margin:12px 0 4px;">${bars}</div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-dim);">
+        <span>${firstDate}</span><span>${trend} ${histData.length} jours</span><span>${lastDate}</span>
+      </div>`;
+  }
+
   wrap.innerHTML = `
     <div class="price-display">
-      <div class="price-main">${priceEUR} €</div>
-      <div class="price-sub">${priceUSD.toFixed(2)} $ · Marché ${currentPriceLang === 'EN' ? 'Anglais' : 'Japonais'}</div>
-      <div class="price-source">Source: PriceCharting · Mis à jour le ${updated}</div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;">
+        <div class="price-main">${priceEUR} €</div>
+        <div style="font-size:11px;color:var(--text-dim);">${priceUSD.toFixed(2)} $</div>
+      </div>
+      <div class="price-sub">Marché ${currentPriceLang === 'EN' ? '🇬🇧 Anglais' : '🇯🇵 Japonais'}</div>
+      ${chartHtml}
+      <div class="price-source">Source: PriceCharting · ${updated}</div>
     </div>`;
 }
 
