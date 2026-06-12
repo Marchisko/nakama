@@ -175,7 +175,11 @@ body::before{display:none;}
 /* ===== PAGES INTERNES ===== */
 .page-inner{padding:0 16px 16px;max-width:820px;margin:0 auto;}
 
-.pc{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:20px;margin-bottom:12px;}
+.page-inner-header{padding:20px 16px 8px;background:var(--bg2);border-bottom:1px solid var(--border);}
+.page-inner-eyebrow{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:3px;}
+.page-inner-title{font-family:Georgia,serif;font-size:22px;font-weight:700;color:var(--navy);line-height:1.1;}
+.page-inner-title span{color:var(--gold);}
+.page-inner-sub{font-size:11px;color:var(--text-dim);margin-top:4px;}
 .pc-title{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.12em;margin-bottom:4px;}
 .pc-value{font-size:30px;font-weight:700;color:var(--navy);}
 .pc-sub{font-size:11px;color:var(--text-dim);margin-top:3px;}
@@ -376,21 +380,10 @@ body::before{display:none;}
 
 <!-- COLLECTION -->
 <div class="page" id="pageCollection">
-  <div class="page-hero" style="background:linear-gradient(180deg,rgba(201,168,76,0.07) 0%,transparent 100%)">
-    <div class="page-hero-silhouette">
-      <svg viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <ellipse cx="200" cy="75" rx="30" ry="32" fill="white"/>
-        <path d="M170 107 Q160 125 155 155 Q148 188 153 215 L175 210 Q177 193 180 178 L183 215 L217 215 L220 178 Q223 193 225 210 L247 215 Q252 188 245 155 Q240 125 230 107 Z" fill="white"/>
-        <path d="M155 155 Q130 148 118 162 Q107 178 122 188 Q133 193 143 183" fill="white"/>
-        <path d="M245 155 Q270 148 282 162 Q293 178 278 188 Q267 193 257 183" fill="white"/>
-        <rect x="183" y="215" width="10" height="70" rx="5" fill="white"/>
-        <rect x="207" y="215" width="10" height="70" rx="5" fill="white"/>
-        <path d="M165 60 C165 40 235 40 235 60" stroke="white" stroke-width="4" fill="none" stroke-linecap="round"/>
-      </svg>
-    </div>
-    <div class="page-hero-eyebrow">Trésor de Mer</div>
-    <div class="page-hero-title">Ma <span>Collection</span></div>
-    <div class="page-hero-sub" id="collHeroSub">0 cartes · 0 sets</div>
+  <div class="page-inner-header">
+    <div class="page-inner-eyebrow">Trésor de Mer</div>
+    <div class="page-inner-title">Ma <span>Collection</span></div>
+    <div class="page-inner-sub" id="collHeroSub">0 cartes · 0 sets</div>
   </div>
   <div class="page-inner" style="padding-top:16px;">
     <div class="pc">
@@ -409,10 +402,10 @@ body::before{display:none;}
 
 <!-- WISHLIST -->
 <div class="page" id="pageWishlist">
-  <div class="page-hero" style="background:linear-gradient(180deg,rgba(236,72,153,0.07) 0%,transparent 100%)">
-    <div class="page-hero-eyebrow">Cartes convoitées</div>
-    <div class="page-hero-title">Ma <span style="color:var(--pink)">Wishlist</span></div>
-    <div class="page-hero-sub" id="wishHeroSub">0 cartes</div>
+  <div class="page-inner-header">
+    <div class="page-inner-eyebrow">Cartes convoitées</div>
+    <div class="page-inner-title">Ma <span style="color:var(--pink)">Wishlist</span></div>
+    <div class="page-inner-sub" id="wishHeroSub">0 cartes</div>
   </div>
   <div class="page-inner" style="padding-top:16px;">
     <div id="wishlistList"></div>
@@ -421,9 +414,9 @@ body::before{display:none;}
 
 <!-- PROFIL -->
 <div class="page" id="pageProfil">
-  <div class="page-hero" style="background:linear-gradient(180deg,rgba(26,159,168,0.07) 0%,transparent 100%)">
-    <div class="page-hero-eyebrow">Statistiques</div>
-    <div class="page-hero-title">Mon <span style="color:var(--teal)">Profil</span></div>
+  <div class="page-inner-header">
+    <div class="page-inner-eyebrow">Statistiques</div>
+    <div class="page-inner-title">Mon <span style="color:var(--teal)">Profil</span></div>
   </div>
   <div class="page-inner" style="padding-top:16px;">
     <div class="migrate-banner" id="migrateBanner">
@@ -431,7 +424,7 @@ body::before{display:none;}
       <div class="migrate-sub">Tu as des cartes sauvegardées localement. Veux-tu les importer dans ton compte ?</div>
       <button class="migrate-btn" onclick="migrateLocalData()">Importer maintenant</button>
     </div>
-    <div class="pc" style="background:linear-gradient(135deg,#0d0a1f,#1a1035);border-color:rgba(201,168,76,0.2);">
+    <div class="pc">
       <div class="pc-title">Collection</div>
       <div class="pc-value" id="profilValue">— €</div>
       <div class="pc-sub" id="profilValueSub">Valeur estimée · prix à venir</div>
@@ -509,7 +502,12 @@ body::before{display:none;}
 <!-- AUTH -->
 <div class="auth-overlay" id="authOverlay">
   <div class="auth-box">
-    <div class="auth-logo">Nakama<span> ✦</span></div>
+    <div class="auth-logo">
+      <svg viewBox="0 0 200 44" height="44" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto;">
+        <text x="100" y="28" font-family="Georgia,serif" font-size="24" font-weight="700" fill="#1a1a2e" text-anchor="middle" letter-spacing="4">NAKAMA</text>
+        <text x="100" y="40" font-family="Georgia,serif" font-size="7" fill="rgba(201,168,76,0.8)" text-anchor="middle" letter-spacing="2.5">ONE PIECE CARD TRACKER</text>
+      </svg>
+    </div>
     <div class="auth-sub">Synchronise ta collection sur tous tes appareils</div>
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="switchAuthTab('login',this)">Connexion</button>
