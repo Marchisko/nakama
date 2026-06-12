@@ -790,11 +790,7 @@ function openModal(c){
     ...(c.colors||[]).map(col=>`<span class="badge" style="border-color:${COLORS[col]||'#888'}33;color:${COLORS[col]||'#888'}">${col}</span>`)
   ];
   document.getElementById('mBadges').innerHTML=badges.join('');
-  document.getElementById('mStats').innerHTML=[
-    {val:c.cost??'—',lbl:'Coût'},
-    {val:c.power?(c.power/1000)+'k':'—',lbl:'Puissance'},
-    {val:c.counter??'—',lbl:'Counter'}
-  ].map(s=>`<div class="stat-box"><div class="stat-val">${s.val}</div><div class="stat-lbl">${s.lbl}</div></div>`).join('');
+  document.getElementById('mStats').innerHTML='';
   document.getElementById('cmLink').href=`https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=${encodeURIComponent(c.name||'')}`;
   document.getElementById('ebayLink').href=buildEbayUrl(c);
   // Reset price display and load
@@ -1581,7 +1577,7 @@ function renderPriceDisplay(){
     gradedBlock = `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;">
         <div>
-          <div style="font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;">✦ Gradé PSA</div>
+          <div style="font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;">✦ PSA 9</div>
           <div style="font-size:24px;font-weight:700;color:var(--navy);font-family:Georgia,serif;">${gradedEUR} €</div>
         </div>
         <div style="text-align:right;">
