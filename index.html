@@ -151,7 +151,17 @@ body::before{display:none;}
 .ebay-link:hover{color:#fff;background:var(--ebay-blue);border-color:var(--ebay-blue);}
 .modal-close-btn{width:100%;margin-top:10px;padding:14px;background:var(--bg3);border:1px solid var(--border);color:var(--text-dim);border-radius:14px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .2s;}
 .modal-close-btn:hover{background:var(--border);color:var(--text);}
-.price-chart-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:20px;margin-top:6px;}
+.price-section{margin-top:18px;}
+.price-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.price-section-title{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;}
+.price-toggle{display:flex;background:var(--bg3);border-radius:8px;padding:2px;gap:2px;}
+.price-toggle-btn{background:none;border:none;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;color:var(--text-dim);transition:all .15s;}
+.price-toggle-btn.active{background:var(--navy);color:#fff;}
+.price-display{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:16px;}
+.price-main{font-family:Georgia,serif;font-size:28px;font-weight:700;color:var(--navy);}
+.price-sub{font-size:11px;color:var(--text-dim);margin-top:3px;}
+.price-source{font-size:9px;color:rgba(0,0,0,.2);margin-top:8px;text-align:right;}
+.price-na{text-align:center;padding:16px;color:var(--text-dim);font-size:12px;}
 .price-chart-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:10px 0;}
 .price-chart-icon{font-size:28px;opacity:.4;}
 .price-chart-msg{font-size:13px;font-weight:600;color:var(--text-dim);}
@@ -563,12 +573,19 @@ body::before{display:none;}
       <div class="modal-badges" id="mBadges"></div>
       <div class="modal-stats" id="mStats"></div>
       <!-- Price chart -->
-      <div class="modal-section-title" style="margin-top:18px">📈 Évolution du prix</div>
-      <div class="price-chart-wrap" id="priceChartWrap">
-        <div class="price-chart-empty">
-          <div class="price-chart-icon">📊</div>
-          <div class="price-chart-msg">Données de prix à venir</div>
-          <div class="price-chart-sub">Les prix eBay seront disponibles prochainement</div>
+      <div class="price-section" id="priceSection">
+        <div class="price-header">
+          <div class="price-section-title">💰 Prix marché</div>
+          <div class="price-toggle">
+            <button class="price-toggle-btn active" id="btnPriceEN" onclick="setPriceLang('EN')">EN</button>
+            <button class="price-toggle-btn" id="btnPriceJP" onclick="setPriceLang('JP')">JP</button>
+          </div>
+        </div>
+        <div id="priceChartWrap">
+          <div class="price-chart-empty">
+            <div class="price-chart-icon">📊</div>
+            <div class="price-chart-msg">Chargement...</div>
+          </div>
         </div>
       </div>
 
@@ -780,8 +797,11 @@ function openModal(c){
   ].map(s=>`<div class="stat-box"><div class="stat-val">${s.val}</div><div class="stat-lbl">${s.lbl}</div></div>`).join('');
   document.getElementById('cmLink').href=`https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=${encodeURIComponent(c.name||'')}`;
   document.getElementById('ebayLink').href=buildEbayUrl(c);
-  // Reset price chart (placeholder until prices table is populated)
-  renderPriceChart(null);
+  // Reset price display and load
+  currentPriceLang = 'EN';
+  document.getElementById('btnPriceEN').classList.add('active');
+  document.getElementById('btnPriceJP').classList.remove('active');
+  loadCardPrice(c.id);
   updateModalBtns();
   document.getElementById('modal').classList.add('open');
   document.body.style.overflow='hidden';
@@ -1484,6 +1504,57 @@ function switchPageById(pageId){
 function handlePremium(plan){
   // Placeholder — à connecter avec RevenueCat ou Stripe lors du lancement
   showToast(currentLang==='fr'?'Bientôt disponible !':'Coming soon!');
+}
+
+let currentPriceLang = 'EN';
+let currentPriceData = null;
+const EUR_RATE = 0.92; // Taux USD→EUR approximatif
+
+async function loadCardPrice(cardId){
+  const wrap = document.getElementById('priceChartWrap');
+  wrap.innerHTML = '<div class="price-chart-empty"><div class="price-chart-icon">⏳</div><div class="price-chart-msg">Chargement...</div></div>';
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/prices?card_id=eq.${cardId}&select=*`, {
+      headers: {"apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`}
+    });
+    const data = await r.json();
+    if(data && data.length > 0){
+      currentPriceData = data[0];
+    } else {
+      currentPriceData = null;
+    }
+  } catch(e){
+    currentPriceData = null;
+  }
+  renderPriceDisplay();
+}
+
+function setPriceLang(lang){
+  currentPriceLang = lang;
+  document.getElementById('btnPriceEN').classList.toggle('active', lang === 'EN');
+  document.getElementById('btnPriceJP').classList.toggle('active', lang === 'JP');
+  renderPriceDisplay();
+}
+
+function renderPriceDisplay(){
+  const wrap = document.getElementById('priceChartWrap');
+  if(!currentPriceData){
+    wrap.innerHTML = '<div class="price-na">Prix non disponible pour cette carte</div>';
+    return;
+  }
+  const priceUSD = currentPriceLang === 'EN' ? currentPriceData.price_en_usd : currentPriceData.price_jp_usd;
+  if(!priceUSD){
+    wrap.innerHTML = `<div class="price-na">Prix ${currentPriceLang} non disponible</div>`;
+    return;
+  }
+  const priceEUR = (priceUSD * EUR_RATE).toFixed(2);
+  const updated = currentPriceData.last_updated ? new Date(currentPriceData.last_updated).toLocaleDateString('fr-FR') : '—';
+  wrap.innerHTML = `
+    <div class="price-display">
+      <div class="price-main">${priceEUR} €</div>
+      <div class="price-sub">${priceUSD.toFixed(2)} $ · Marché ${currentPriceLang === 'EN' ? 'Anglais' : 'Japonais'}</div>
+      <div class="price-source">Source: PriceCharting · Mis à jour le ${updated}</div>
+    </div>`;
 }
 
 function renderPriceChart(priceData){
