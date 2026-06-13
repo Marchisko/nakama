@@ -588,7 +588,7 @@ body::before{display:none;}
     <div class="auth-logo">
       <svg viewBox="0 0 200 44" height="44" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto;">
         <text x="100" y="28" font-family="Georgia,serif" font-size="24" font-weight="700" fill="#1a1a2e" text-anchor="middle" letter-spacing="4">NAKAMA</text>
-        <text x="100" y="40" font-family="Georgia,serif" font-size="7" fill="rgba(201,168,76,0.8)" text-anchor="middle" letter-spacing="2.5">ONE PIECE CARD TRACKER</text>
+        <text x="100" y="40" font-family="Georgia,serif" font-size="7" fill="rgba(201,168,76,0.8)" text-anchor="middle" letter-spacing="2.5">TON COMPAGNON TCG</text>
       </svg>
     </div>
     <div class="auth-sub">Synchronise ta collection sur tous tes appareils</div>
@@ -902,7 +902,7 @@ function closeModal(){
 }
 function handleModalClick(e){if(e.target.id==='modal')closeModal();}
 
-function renderCollectionPage(){
+async function renderCollectionPage(){
   const items=Object.values(collection);
   const totalQty=items.reduce((s,i)=>s+i.qty,0);
   const sets=new Set(items.map(i=>i.card.set_id)).size;
@@ -910,7 +910,44 @@ function renderCollectionPage(){
   document.getElementById('statUnique').textContent=items.length;
   document.getElementById('statSets').textContent=sets;
   document.getElementById('collHeroSub').textContent=`${items.length} cartes uniques · ${sets} sets`;
-  document.getElementById('portfolioSub').textContent=items.length?`${items.length} cartes uniques · ${sets} sets`:'Prix à venir avec PriceCharting';
+
+  // Calcul valeur totale depuis Supabase prices
+  if(items.length){
+    document.getElementById('portfolioValue').textContent='...';
+    document.getElementById('portfolioSub').textContent=`${items.length} cartes uniques · ${sets} sets`;
+    try {
+      const ids = items.map(i=>i.card.id);
+      // Fetch par batch de 50
+      let totalEur = 0;
+      let priced = 0;
+      for(let b=0; b<ids.length; b+=50){
+        const batch = ids.slice(b,b+50);
+        const inFilter = batch.map(id=>`"${id}"`).join(',');
+        const r = await fetch(`${SB_URL}/rest/v1/prices?card_id=in.(${batch.map(id=>encodeURIComponent(id)).join(',')})&select=card_id,price_market_usd,price_en_usd,price_usd`,{
+          headers:{"apikey":SB_KEY,"Authorization":`Bearer ${SB_KEY}`}
+        });
+        const prices = await r.json();
+        prices.forEach(p=>{
+          const item = collection[p.card_id];
+          if(!item) return;
+          const usd = p.price_market_usd || p.price_en_usd || p.price_usd;
+          if(usd){
+            totalEur += usd * EUR_RATE * item.qty;
+            priced++;
+          }
+        });
+      }
+      document.getElementById('portfolioValue').textContent = totalEur > 0 ? `${totalEur.toFixed(2)} €` : '— €';
+      document.getElementById('portfolioSub').textContent = priced > 0
+        ? `${priced} carte${priced>1?'s':''} évaluée${priced>1?'s':''} sur ${items.length}`
+        : `${items.length} cartes · valeur non disponible`;
+    } catch(e){
+      document.getElementById('portfolioValue').textContent='— €';
+    }
+  } else {
+    document.getElementById('portfolioValue').textContent='— €';
+    document.getElementById('portfolioSub').textContent= currentLang==='fr'?'Prix à venir avec PriceCharting':'Prices coming with PriceCharting';
+  }
   const list=document.getElementById('collectionList');
   if(!items.length){
     list.innerHTML=`<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-title">${currentLang==='fr'?'Collection vide':'Empty collection'}</div><div class="empty-sub">${currentLang==='fr'?'Parcours les cartes et appuie sur<br>"+ Collection"':'Browse cards and tap<br>"+ Collection"'}</div></div>`;
@@ -1612,9 +1649,9 @@ function renderPriceDisplay(){
       if(!usd) return '';
       const eurVal = (usd * EUR_RATE).toFixed(2);
       const labels = {
-        'Market': currentLang === 'fr' ? 'Prix marché' : 'Market price',
-        'Mid':    currentLang === 'fr' ? 'Bon état' : 'Good',
-        'Low':    currentLang === 'fr' ? 'Très joué' : 'Played',
+        'Market': currentLang === 'fr' ? 'Prix moyens des dernières ventes' : 'Recent sales average',
+        'Mid':    currentLang === 'fr' ? 'État moyen' : 'Good condition',
+        'Low':    currentLang === 'fr' ? 'Mauvais état' : 'Poor condition',
       };
       return `
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
@@ -1867,7 +1904,7 @@ splash.style.cssText=`position:fixed;inset:0;z-index:999;background:#1a1a2e;disp
 splash.innerHTML=`
   <div style="text-align:center;">
     <div style="font-family:Georgia,serif;font-size:28px;font-weight:700;color:#fff;letter-spacing:8px;">NAKAMA</div>
-    <div style="font-family:Georgia,serif;font-size:9px;color:rgba(232,197,109,0.75);letter-spacing:3.5px;margin-top:8px;">ONE PIECE CARD TRACKER</div>
+    <div style="font-family:Georgia,serif;font-size:9px;color:rgba(232,197,109,0.75);letter-spacing:3.5px;margin-top:8px;">TON COMPAGNON TCG</div>
     <div style="width:0px;height:1px;background:#e8c56d;margin:18px auto 0;animation:splashBar 1.2s ease forwards;opacity:0.6;"></div>
   </div>
   <style>@keyframes splashBar{from{width:0;opacity:0}to{width:100px;opacity:.6}}</style>`;
