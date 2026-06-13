@@ -1610,11 +1610,16 @@ function renderPriceDisplay(){
 
     const priceRow = (label, usd, isMain=false) => {
       if(!usd) return '';
-      const eurVal = eur && isMain ? eur.toFixed(2) : (usd * EUR_RATE).toFixed(2);
+      const eurVal = (usd * EUR_RATE).toFixed(2);
+      const labels = {
+        'Market': currentLang === 'fr' ? 'Prix marché' : 'Market price',
+        'Mid':    currentLang === 'fr' ? 'Bon état' : 'Good',
+        'Low':    currentLang === 'fr' ? 'Très joué' : 'Played',
+      };
       return `
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
           <div>
-            <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;">${label}</div>
+            <div style="font-size:10px;color:${isMain?'var(--gold)':'var(--text-dim)'};text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;">${labels[label]||label}</div>
             <div style="font-size:${isMain?'24':'18'}px;font-weight:${isMain?'700':'600'};color:var(--navy);font-family:Georgia,serif;">${eurVal} €</div>
           </div>
           <div style="font-size:11px;color:var(--text-dim);">${usd.toFixed(2)} $</div>
