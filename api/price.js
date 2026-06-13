@@ -68,7 +68,14 @@ export default async function handler(req, res) {
 
     // Cache 24h côté Vercel CDN
     res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate');
-    return res.status(200).json(result);
+    return res.status(200).json({
+      ...result,
+      debug: {
+        productsCount: productsEN.length,
+        firstProduct: productsEN[0] || null,
+        queryUsed: queryEN
+      }
+    });
 
   } catch (err) {
     console.error('PriceCharting error:', err);
