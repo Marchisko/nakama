@@ -89,8 +89,8 @@ body::before{display:none;}
 .card{background:var(--bg2);border-radius:12px;overflow:hidden;cursor:pointer;border:1px solid var(--border);transition:transform .18s,border-color .2s,box-shadow .2s;animation:fadeIn .3s ease both;}
 .card:hover{transform:translateY(-4px) scale(1.02);border-color:var(--border-strong);box-shadow:0 8px 24px rgba(0,0,0,.1);}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.card-img-wrap{position:relative;aspect-ratio:6/8.5;background:var(--bg3);overflow:hidden;}
-.card-img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .3s;}
+.card-img-wrap{position:relative;aspect-ratio:63/88;background:var(--bg3);overflow:hidden;}
+.card-img{width:100%;height:100%;object-fit:contain;display:block;opacity:0;transition:opacity .3s;}
 .card-img.loaded{opacity:1;}
 .card-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:28px;}
 .rarity-banner{position:absolute;top:0;left:0;right:0;height:3px;}
@@ -659,7 +659,39 @@ let searchTimer=null;
 let collection=JSON.parse(localStorage.getItem('opitem_collection')||'{}');
 let wishlist=JSON.parse(localStorage.getItem('opitem_wishlist')||'{}');
 
-const OP_RARITIES=['Leader','SecretRare','SuperRare','Rare','Uncommon','Common','Special','Promo'];
+const PK_SET_NAMES = {
+  'base1':'Base Set','base2':'Jungle','base3':'Fossil','base4':'Base Set 2','base5':'Team Rocket','base6':'Legendary Collection',
+  'basep':'Wizards Black Star Promos','gym1':'Gym Heroes','gym2':'Gym Challenge',
+  'neo1':'Neo Genesis','neo2':'Neo Discovery','neo3':'Neo Revelation','neo4':'Neo Destiny',
+  'si1':'Southern Islands','bwp':'BW Black Star Promos','dp1':'Diamond & Pearl',
+  'dp2':'Mysterious Treasures','dp3':'Secret Wonders','dp4':'Great Encounters','dp5':'Majestic Dawn',
+  'dp6':'Legends Awakened','dp7':'Stormfront','pl1':'Platinum','pl2':'Rising Rivals',
+  'pl3':'Supreme Victors','pl4':'Arceus','hgss1':'HeartGold SoulSilver','hgss2':'Unleashed',
+  'hgss3':'Undaunted','hgss4':'Triumphant','hsp':'HS Black Star Promos','col1':'Call of Legends',
+  'bw1':'Black & White','bw2':'Emerging Powers','bw3':'Noble Victories','bw4':'Next Destinies',
+  'bw5':'Dark Explorers','bw6':'Dragons Exalted','bw7':'Boundaries Crossed','bw8':'Plasma Storm',
+  'bw9':'Plasma Freeze','bw10':'Plasma Blast','bw11':'Legendary Treasures','xy1':'XY',
+  'xy2':'Flashfire','xy3':'Furious Fists','xy4':'Phantom Forces','xy5':'Primal Clash',
+  'xy6':'Roaring Skies','xy7':'Ancient Origins','xy8':'BREAKthrough','xy9':'BREAKpoint',
+  'xy10':'Fates Collide','xy11':'Steam Siege','xy12':'Evolutions','xyp':'XY Black Star Promos',
+  'g1':'Generations','dc1':'Double Crisis','det1':'Dragon Vault',
+  'sm1':'Sun & Moon','sm2':'Guardians Rising','sm3':'Burning Shadows','sm35':'Shining Legends',
+  'sm4':'Crimson Invasion','sm5':'Ultra Prism','sm6':'Forbidden Light','sm7':'Celestial Storm',
+  'sm75':'Dragon Majesty','sm8':'Lost Thunder','sm9':'Team Up','sm10':'Unbroken Bonds',
+  'sm11':'Unified Minds','sm115':'Hidden Fates','sm12':'Cosmic Eclipse','smp':'SM Black Star Promos',
+  'swsh1':'Sword & Shield','swsh2':'Rebel Clash','swsh3':'Darkness Ablaze','swsh35':'Champion\'s Path',
+  'swsh4':'Vivid Voltage','swsh45':'Shining Fates','swsh5':'Battle Styles','swsh6':'Chilling Reign',
+  'swsh7':'Evolving Skies','swsh75':'Celebrations','swsh8':'Fusion Strike','swsh9':'Brilliant Stars',
+  'swsh10':'Astral Radiance','swsh105':'Pokemon GO','swsh11':'Lost Origin','swsh12':'Silver Tempest',
+  'swsh125':'Crown Zenith','swshp':'SWSH Black Star Promos',
+  'sv1':'Scarlet & Violet','sv2':'Paldea Evolved','sv3':'Obsidian Flames','sv3pt5':'151',
+  'sv4':'Paradox Rift','sv4pt5':'Paldean Fates','sv5':'Temporal Forces','sv6':'Twilight Masquerade',
+  'sv6pt5':'Shrouded Fable','sv7':'Stellar Crown','sv7pt5':'Surging Sparks','sv8':'Prismatic Evolutions',
+  'sv8pt5':'Destined Rivals','svp':'SVP Black Star Promos',
+};
+
+const OP_HERO = 'https://raw.githubusercontent.com/Marchisko/onepieceitem/main/hero.png';
+const PK_HERO = '';  // pas d'image Pokémon pour l'instant
 const OP_RARITY_LABELS={Leader:'Leader',SecretRare:'Secret Rare',SuperRare:'Super Rare',Rare:'Rare',Uncommon:'Uncommon',Common:'Common',Special:'Special',Promo:'Promo'};
 const OP_SETS=['OP-01','OP-02','OP-03','OP-04','OP-05','OP-06','OP-07','OP-08','OP-09','OP-10','OP-11','OP-12','OP-13','OP-14','ST-01','ST-02','ST-03','ST-04','ST-05','ST-06','ST-07','ST-08','ST-09','ST-10','ST-11','ST-12','ST-13','ST-14','ST-15','EB-01','EB-02','EB-03','EB-04','PRB-01','PROMO'];
 const PK_RARITIES=['SecretRare','SuperRare','Rare','Uncommon','Common','Promo'];
@@ -688,7 +720,7 @@ function buildFilters(){
 
   const sf=document.getElementById('setFilters');
   sf.innerHTML=`<button class="chip active" onclick="setSet(null,this)">Tous sets</button>`+
-    sets.map(s=>`<button class="chip" onclick="setSet('${s}',this)">${s}</button>`).join('');
+    sets.map(s=>`<button class="chip" onclick="setSet('${s}',this)">${currentGame==='pokemon'?(PK_SET_NAMES[s]||s):s}</button>`).join('');
 }
 
 async function switchGame(game){
@@ -698,6 +730,12 @@ async function switchGame(game){
   document.getElementById('btnPK').classList.toggle('active',game==='pokemon');
   st={rarity:null,set:null,search:'',offset:0,total:0};
   document.getElementById('searchInput').value='';
+  // Swap hero image
+  const heroImg=document.getElementById('heroImg');
+  if(heroImg){
+    if(game==='onepiece') heroImg.src=OP_HERO;
+    else heroImg.src='';
+  }
   if(game==='pokemon') await loadPokemonSets();
   buildFilters();
   fetchCards();
@@ -764,7 +802,7 @@ function renderCards(cards,append){
       </div>
       <div class="card-body">
         <div class="card-name">${c.name||'—'}</div>
-        <div class="card-sub"><span class="card-set">${c.set_id||''}</span><div class="color-dots">${colors}</div></div>
+        <div class="card-sub"><span class="card-set">${currentGame==='pokemon'?(PK_SET_NAMES[c.set_id]||c.set_id):c.set_id||''}</span><div class="color-dots">${colors}</div></div>
       </div>`;
     el.onclick=()=>openModal(c);
     grid.appendChild(el);
