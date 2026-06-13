@@ -692,7 +692,8 @@ const PK_SET_NAMES = {
 };
 
 const OP_HERO = 'https://raw.githubusercontent.com/Marchisko/onepieceitem/main/hero.png';
-const PK_HERO = '';  // pas d'image Pokémon pour l'instant
+const PK_HERO = '';
+const OP_RARITIES=['Leader','SecretRare','SuperRare','Rare','Uncommon','Common','Special','Promo'];
 const OP_RARITY_LABELS={Leader:'Leader',SecretRare:'Secret Rare',SuperRare:'Super Rare',Rare:'Rare',Uncommon:'Uncommon',Common:'Common',Special:'Special',Promo:'Promo'};
 const OP_SETS=['OP-01','OP-02','OP-03','OP-04','OP-05','OP-06','OP-07','OP-08','OP-09','OP-10','OP-11','OP-12','OP-13','OP-14','ST-01','ST-02','ST-03','ST-04','ST-05','ST-06','ST-07','ST-08','ST-09','ST-10','ST-11','ST-12','ST-13','ST-14','ST-15','EB-01','EB-02','EB-03','EB-04','PRB-01','PROMO'];
 const PK_RARITIES=['SecretRare','SuperRare','Rare','Uncommon','Common','Promo'];
@@ -845,6 +846,8 @@ function openModal(c){
   currentPriceLang = 'EN';
   document.getElementById('btnPriceEN').classList.add('active');
   document.getElementById('btnPriceJP').classList.remove('active');
+  // Cacher le toggle EN/JP pour Pokémon
+  document.querySelector('.price-toggle').style.display = currentGame === 'pokemon' ? 'none' : 'flex';
   loadCardPrice(c.id);
   updateModalBtns();
   document.getElementById('modal').classList.add('open');
@@ -1589,7 +1592,47 @@ function renderPriceDisplay(){
     return;
   }
 
-  // Colonnes Supabase : price_en_usd, price_jp_usd (loose), price_en_graded_usd, price_jp_graded_usd (PSA)
+  const updated = currentPriceData.last_updated
+    ? new Date(currentPriceData.last_updated).toLocaleDateString('fr-FR')
+    : '—';
+
+  // ── POKÉMON : low / mid / market ─────────────────────────────────────────
+  if(currentGame === 'pokemon'){
+    const low    = currentPriceData.price_low_usd;
+    const mid    = currentPriceData.price_mid_usd;
+    const market = currentPriceData.price_market_usd || currentPriceData.price_usd;
+    const eur    = currentPriceData.price_eur;
+
+    if(!low && !mid && !market){
+      wrap.innerHTML = '<div class="price-na">Prix non disponible pour cette carte</div>';
+      return;
+    }
+
+    const priceRow = (label, usd, isMain=false) => {
+      if(!usd) return '';
+      const eurVal = eur && isMain ? eur.toFixed(2) : (usd * EUR_RATE).toFixed(2);
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+          <div>
+            <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;">${label}</div>
+            <div style="font-size:${isMain?'24':'18'}px;font-weight:${isMain?'700':'600'};color:var(--navy);font-family:Georgia,serif;">${eurVal} €</div>
+          </div>
+          <div style="font-size:11px;color:var(--text-dim);">${usd.toFixed(2)} $</div>
+        </div>`;
+    };
+
+    wrap.innerHTML = `
+      <div class="price-display">
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:2px;">Marché TCGPlayer</div>
+        ${priceRow('Market', market, true)}
+        ${priceRow('Mid', mid)}
+        ${priceRow('Low', low)}
+        <div class="price-source">Source: TCGPlayer · ${updated}</div>
+      </div>`;
+    return;
+  }
+
+  // ── ONE PIECE : loose + PSA 9 ─────────────────────────────────────────────
   const isEN = currentPriceLang === 'EN';
   const looseUSD  = isEN ? currentPriceData.price_en_usd  : currentPriceData.price_jp_usd;
   const gradedUSD = isEN ? currentPriceData.price_en_graded_usd : currentPriceData.price_jp_graded_usd;
@@ -1599,14 +1642,9 @@ function renderPriceDisplay(){
     return;
   }
 
-  const updated = currentPriceData.last_updated
-    ? new Date(currentPriceData.last_updated).toLocaleDateString('fr-FR')
-    : '—';
   const flag  = isEN ? '🇬🇧' : '🇯🇵';
   const label = isEN ? 'Anglais' : 'Japonais';
 
-  // Bloc loose (prix de base — toutes les cartes)
-  // On cache le loose si il est supérieur au gradé (données PriceCharting incohérentes)
   const looseValid = looseUSD && (!gradedUSD || looseUSD <= gradedUSD);
   let looseBlock = '';
   if(looseValid){
@@ -1623,7 +1661,6 @@ function renderPriceDisplay(){
       </div>`;
   }
 
-  // Bloc gradé PSA (uniquement cartes Leader/SR/SecretRare)
   let gradedBlock = '';
   if(gradedUSD){
     const gradedEUR = (gradedUSD * EUR_RATE).toFixed(2);
