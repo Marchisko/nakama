@@ -92,7 +92,8 @@ body::before{display:none;}
 .card-img-wrap{position:relative;aspect-ratio:63/88;background:var(--bg3);overflow:hidden;}
 .card-img{width:100%;height:100%;object-fit:contain;display:block;opacity:0;transition:opacity .3s;}
 .card-img.loaded{opacity:1;}
-.card-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:28px;}
+.card-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:28px;transition:opacity .3s;}
+.card-img.loaded ~ .card-placeholder, .card-img.loaded+.card-placeholder{opacity:0;}
 .rarity-banner{position:absolute;top:0;left:0;right:0;height:3px;}
 .r-Leader{background:linear-gradient(90deg,#7c3aed,#a855f7);}
 .r-SecretRare{background:linear-gradient(90deg,#c0392b,#e74c3c);}
@@ -796,8 +797,7 @@ function renderCards(cards,append){
     el.innerHTML=`
       <div class="card-img-wrap">
         <div class="rarity-banner r-${c.rarity||'Common'}"></div>
-        <div class="card-placeholder">🃏</div>
-        <img class="card-img" src="${imgUrl(c.image_url)}" onload="this.classList.add('loaded')" onerror="this.style.display='none'">
+        <img class="card-img" src="${imgUrl(c.image_url)}" onload="this.classList.add('loaded');this.previousElementSibling&&(this.previousElementSibling.style.display='none')" onerror="this.style.display='none'">
         ${collBadge}${wishBadge}
       </div>
       <div class="card-body">
