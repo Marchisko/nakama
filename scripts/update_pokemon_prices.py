@@ -1,9 +1,16 @@
 import requests, time, os
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from supabase import create_client
 
 SB_URL = os.environ['SB_URL']
 SB_KEY = os.environ['SB_KEY']
 sb = create_client(SB_URL, SB_KEY)
+
+# Session avec retry automatique sur les erreurs réseau
+session = requests.Session()
+retry = Retry(total=3, backoff_factor=3, status_forcelist=[500, 502, 503, 504])
+session.mount("https://", HTTPAdapter(max_retries=retry))
 
 print("Demarrage mise a jour prix Pokemon...")
 
@@ -12,15 +19,16 @@ page = 1
 while True:
     for attempt in range(5):
         try:
-            r = requests.get("https://api.pokemontcg.io/v2/cards", params={
+            r = session.get("https://api.pokemontcg.io/v2/cards", params={
                 'page': page, 'pageSize': 250,
                 'select': 'id,tcgplayer,cardmarket'
-            }, timeout=60)
+            }, timeout=90)
             data = r.json()
             break
         except Exception as e:
-            print("Retry page", page, "attempt", attempt+1, str(e)[:60])
-            time.sleep(5 * (attempt + 1))
+            wait = 10 * (attempt + 1)
+            print(f"Retry page {page} attempt {attempt+1} - wait {wait}s - {str(e)[:60]}")
+            time.sleep(wait)
     else:
         print("Page", page, "failed after 5 attempts, stopping")
         break
