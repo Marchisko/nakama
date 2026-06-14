@@ -392,7 +392,7 @@ body::before{display:none;}
 <!-- COLLECTION -->
 <div class="page" id="pageCollection">
   <div class="page-inner-header">
-    <div class="page-inner-eyebrow">Trésor de Mer</div>
+    <div class="page-inner-eyebrow">Ma collection</div>
     <div class="page-inner-title">Ma <span>Collection</span></div>
     <div class="page-inner-sub" id="collHeroSub">0 cartes · 0 sets</div>
   </div>
@@ -468,14 +468,39 @@ body::before{display:none;}
       <div class="migrate-sub">Tu as des cartes sauvegardées localement. Veux-tu les importer dans ton compte ?</div>
       <button class="migrate-btn" onclick="migrateLocalData()">Importer maintenant</button>
     </div>
-    <div class="pc">
-      <div class="pc-title">Collection</div>
-      <div class="pc-value" id="profilValue">— €</div>
-      <div class="pc-sub" id="profilValueSub">Valeur estimée · prix à venir</div>
-      <div class="pc-stats">
-        <div class="p-stat"><div class="p-stat-val" id="profilTotal">0</div><div class="p-stat-lbl">Cartes</div></div>
-        <div class="p-stat"><div class="p-stat-val" id="profilUnique">0</div><div class="p-stat-lbl">Uniques</div></div>
-        <div class="p-stat"><div class="p-stat-val" id="profilSets">0</div><div class="p-stat-lbl">Sets</div></div>
+    <!-- ONE PIECE -->
+    <div style="margin-bottom:8px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <div style="width:3px;height:16px;background:#e8c56d;border-radius:2px;"></div>
+        <div style="font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.12em;">One Piece</div>
+      </div>
+      <div class="pc">
+        <div class="pc-title">Valeur estimée</div>
+        <div class="pc-value" id="profilValueOP">— €</div>
+        <div class="pc-sub" id="profilValueSubOP">—</div>
+        <div class="pc-stats">
+          <div class="p-stat"><div class="p-stat-val" id="profilTotalOP">0</div><div class="p-stat-lbl">Cartes</div></div>
+          <div class="p-stat"><div class="p-stat-val" id="profilUniqueOP">0</div><div class="p-stat-lbl">Uniques</div></div>
+          <div class="p-stat"><div class="p-stat-val" id="profilSetsOP">0</div><div class="p-stat-lbl">Sets</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POKÉMON -->
+    <div style="margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <div style="width:3px;height:16px;background:#CC0000;border-radius:2px;"></div>
+        <div style="font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.12em;">Pokémon</div>
+      </div>
+      <div class="pc">
+        <div class="pc-title">Valeur estimée</div>
+        <div class="pc-value" id="profilValuePK">— €</div>
+        <div class="pc-sub" id="profilValueSubPK">—</div>
+        <div class="pc-stats">
+          <div class="p-stat"><div class="p-stat-val" id="profilTotalPK">0</div><div class="p-stat-lbl">Cartes</div></div>
+          <div class="p-stat"><div class="p-stat-val" id="profilUniquePK">0</div><div class="p-stat-lbl">Uniques</div></div>
+          <div class="p-stat"><div class="p-stat-val" id="profilSetsPK">0</div><div class="p-stat-lbl">Sets</div></div>
+        </div>
       </div>
     </div>
 
@@ -805,7 +830,7 @@ function imgUrl(url){
 }
 
 function buildEbayUrl(card){
-  const query=`One Piece TCG ${card.set_id||''} ${card.name||''}`.trim();
+  const query=`${currentGame==='pokemon'?'Pokemon TCG':'One Piece TCG'} ${card.set_id||''} ${card.name||''}`.trim();
   return `https://www.ebay.fr/sch/i.html?_nkw=${encodeURIComponent(query)}&LH_Sold=1&LH_Complete=1&_sop=13`;
 }
 
@@ -1073,11 +1098,23 @@ function removeWish(e,id){
 
 async function renderProfilPage(){
   const items=Object.values(collection);
-  const totalQty=items.reduce((s,i)=>s+i.qty,0);
-  const sets=new Set(items.map(i=>i.card.set_id));
-  document.getElementById('profilTotal').textContent=totalQty;
-  document.getElementById('profilUnique').textContent=items.length;
-  document.getElementById('profilSets').textContent=sets.size;
+
+  // Stats OP
+  const op = await calcGameValue('onepiece');
+  document.getElementById('profilTotalOP').textContent = op.total||0;
+  document.getElementById('profilUniqueOP').textContent = op.unique||0;
+  document.getElementById('profilSetsOP').textContent = op.sets||0;
+  document.getElementById('profilValueOP').textContent = op.value>0 ? `${op.value.toFixed(2)} €` : '— €';
+  document.getElementById('profilValueSubOP').textContent = op.priced>0 ? `${op.priced} carte${op.priced>1?'s':''} évaluée${op.priced>1?'s':''}` : `${op.unique||0} cartes`;
+
+  // Stats PK
+  const pk = await calcGameValue('pokemon');
+  document.getElementById('profilTotalPK').textContent = pk.total||0;
+  document.getElementById('profilUniquePK').textContent = pk.unique||0;
+  document.getElementById('profilSetsPK').textContent = pk.sets||0;
+  document.getElementById('profilValuePK').textContent = pk.value>0 ? `${pk.value.toFixed(2)} €` : '— €';
+  document.getElementById('profilValueSubPK').textContent = pk.priced>0 ? `${pk.priced} carte${pk.priced>1?'s':''} évaluée${pk.priced>1?'s':''}` : `${pk.unique||0} cartes`;
+
   const rarityCounts={};
   items.forEach(i=>{const r=i.card.rarity||'Common';rarityCounts[r]=(rarityCounts[r]||0)+i.qty;});
   const maxCount=Math.max(...Object.values(rarityCounts),1);
@@ -1100,6 +1137,7 @@ async function renderProfilPage(){
       <span class="badge badge-rarity" style="font-size:9.5px;">${RARITY_LABELS[item.card.rarity]||''}</span>
     </div>`).join('')
     : emptyState('Tes cartes les plus rares apparaîtront ici');
+  const sets=new Set(items.map(i=>i.card.set_id));
   const setProgress=document.getElementById('profilSetProgress');
   if(!items.length){setProgress.innerHTML=emptyState('Ajoute des cartes pour suivre ta progression');
   }else{
@@ -1152,7 +1190,7 @@ const i18n = {
     filterAll: 'Tout', filterAllSets: 'Tous sets',
     navCards: 'Cartes', navCollection: 'Collection', navWishlist: 'Wishlist', navProfil: 'Profil',
     heroEyebrow: 'Grand Line Collection',
-    collEyebrow: 'Trésor de Mer', collTitle: 'Ma', collTitleSpan: 'Collection',
+    collEyebrow: 'Ma Collection', collTitle: 'Ma', collTitleSpan: 'Collection',
     collStat0: 'Cartes', collStat1: 'Uniques', collStat2: 'Sets',
     wishEyebrow: 'Cartes convoitées', wishTitle: 'Ma',
     profilEyebrow: 'Statistiques', profilTitle: 'Mon', profilTitleSpan: 'Profil',
@@ -1184,7 +1222,7 @@ const i18n = {
     filterAll: 'All', filterAllSets: 'All sets',
     navCards: 'Cards', navCollection: 'Collection', navWishlist: 'Wishlist', navProfil: 'Profile',
     heroEyebrow: 'Grand Line Collection',
-    collEyebrow: 'Sea Treasure', collTitle: 'My', collTitleSpan: 'Collection',
+    collEyebrow: 'My Collection', collTitle: 'My', collTitleSpan: 'Collection',
     collStat0: 'Cards', collStat1: 'Unique', collStat2: 'Sets',
     wishEyebrow: 'Wanted Cards', wishTitle: 'My',
     profilEyebrow: 'Statistics', profilTitle: 'My', profilTitleSpan: 'Profile',
@@ -1866,7 +1904,7 @@ async function shareCard() {
           <div style="width:26px;height:26px;background:#1a1a2e;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#e8c56d;">T</div>
           <div style="font-size:18px;font-weight:700;color:#1a1a2e;font-family:Georgia,sans-serif;letter-spacing:.01em;">Nakama</div>
         </div>
-        <div style="font-size:10px;color:rgba(26,26,46,.4);letter-spacing:.1em;text-transform:uppercase;">One Piece TCG</div>
+        <div style="font-size:10px;color:rgba(26,26,46,.4);letter-spacing:.1em;text-transform:uppercase;">Nakama TCG</div>
       </div>
       <div style="flex:1;display:flex;align-items:center;justify-content:center;">
         <img src="${currentCard.image_url}" crossorigin="anonymous" style="max-height:260px;max-width:180px;border-radius:12px;box-shadow:0 16px 48px rgba(0,0,0,.7),0 0 0 1px ${rColor}44;object-fit:cover;">
@@ -1911,7 +1949,7 @@ function downloadShare() {
   if (!shareDataUrl) return;
   const a = document.createElement('a');
   a.href = shareDataUrl;
-  a.download = `opitem-${currentCard?.id||'card'}.png`;
+  a.download = `nakama-${currentCard?.id||'card'}.png`;
   a.click();
   haptic('medium');
 }
@@ -1923,8 +1961,8 @@ async function nativeShare() {
       const blob = await (await fetch(shareDataUrl)).blob();
       const file = new File([blob], `opitem-${currentCard?.id||'card'}.png`, {type:'image/png'});
       await navigator.share({
-        title: `${currentCard?.name||'Carte'} — OPItem`,
-        text: `Regarde cette carte One Piece TCG sur OPItem !`,
+        title: `${currentCard?.name||'Carte'} — Nakama`,
+        text: `Regarde cette carte TCG sur Nakama !`,
         files: [file]
       });
       haptic('medium');
