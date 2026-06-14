@@ -1,0 +1,30 @@
+name: Update One Piece Prices
+
+on:
+  schedule:
+    - cron: '0 4 * * *'  # Tous les jours à 4h UTC (après Pokémon)
+  workflow_dispatch:
+
+jobs:
+  update-prices:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180  # 3h max pour les 3199 cartes
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install supabase requests
+
+      - name: Update One Piece prices
+        env:
+          SB_URL: ${{ secrets.SB_URL }}
+          SB_KEY: ${{ secrets.SB_KEY }}
+          PC_TOKEN: ${{ secrets.PC_TOKEN }}
+        run: python scripts/update_op_prices.py
