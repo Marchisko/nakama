@@ -911,7 +911,10 @@ function openModal(c){
   ];
   document.getElementById('mBadges').innerHTML=badges.join('');
   document.getElementById('mStats').innerHTML='';
-  document.getElementById('cmLink').href=`https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=${encodeURIComponent(c.name||'')}`;
+  const cmBase = currentGame === 'pokemon'
+    ? 'https://www.cardmarket.com/en/Pokemon/Products/Search?searchString='
+    : 'https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=';
+  document.getElementById('cmLink').href = cmBase + encodeURIComponent(c.name||'');
   document.getElementById('ebayLink').href=buildEbayUrl(c);
   // Reset price display and load
   currentPriceLang = 'EN';
@@ -1084,7 +1087,7 @@ function renderWishlistPage(){
       <div class="list-info">
         <div class="list-name">${item.card.name||'—'}</div>
         <div class="list-meta">${item.card.set_id||''} · ${RARITY_LABELS[item.card.rarity]||item.card.rarity||''}</div>
-        <a class="wish-cm-btn" href="https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=${encodeURIComponent(item.card.name||'')}" target="_blank" onclick="event.stopPropagation()">🔗 Cardmarket</a>
+        <a class="wish-cm-btn" href="https://www.cardmarket.com/en/${(item.card.game||'onepiece')==='pokemon'?'Pokemon':'OnePiece'}/Products/Search?searchString=${encodeURIComponent(item.card.name||'')}" target="_blank" onclick="event.stopPropagation()">🔗 Cardmarket</a>
       </div>
       <button class="list-remove" onclick="removeWish(event,'${item.card.id}')">🗑</button>
     </div>`).join('');
