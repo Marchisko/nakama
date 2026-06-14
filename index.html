@@ -839,7 +839,7 @@ async function fetchCards(append=false){
   if(st.search) params.push(`name=ilike.*${encodeURIComponent(st.search)}*`);
   if(st.rarity) params.push(`rarity=eq.${st.rarity}`);
   if(st.set) params.push(`set_id=eq.${st.set}`);
-  const r=await fetch(`${SB_URL}/rest/v1/cards?${params.join('&')}`,{
+  const r=await fetch(`${SB_URL}/rest/v1/cards?${params.join('&')}&select=id,name,name_fr,set_id,rarity,image_url,image_url_fr,colors,game`,{
     headers:{"apikey":SB_KEY,"Authorization":`Bearer ${SB_KEY}`,"Prefer":"count=exact"}
   });
   const total=parseInt(r.headers.get('content-range')?.split('/')[1]||'0');
@@ -869,11 +869,11 @@ function renderCards(cards,append){
     el.innerHTML=`
       <div class="card-img-wrap">
         <div class="rarity-banner r-${c.rarity||'Common'}"></div>
-        <img class="card-img" src="${imgUrl(c.image_url)}" onload="this.classList.add('loaded');this.previousElementSibling&&(this.previousElementSibling.style.display='none')" onerror="this.style.display='none'">
+        <img class="card-img" src="${imgUrl((currentLang==='fr'&&c.image_url_fr)||c.image_url)}" onload="this.classList.add('loaded');this.previousElementSibling&&(this.previousElementSibling.style.display='none')" onerror="this.style.display='none'">
         ${collBadge}${wishBadge}
       </div>
       <div class="card-body">
-        <div class="card-name">${c.name||'—'}</div>
+        <div class="card-name">${(currentLang==='fr'&&c.name_fr)||c.name||'—'}</div>
         <div class="card-sub"><span class="card-set">${currentGame==='pokemon'?(PK_SET_NAMES[c.set_id]||c.set_id):c.set_id||''}</span><div class="color-dots">${colors}</div></div>
       </div>`;
     el.onclick=()=>openModal(c);
@@ -902,8 +902,8 @@ function onSearch(){
 
 function openModal(c){
   currentCard=c;
-  document.getElementById('mImg').src=imgUrl(c.image_url)||'';
-  document.getElementById('mName').textContent=c.name||'—';
+  document.getElementById('mImg').src=imgUrl((currentLang==='fr'&&c.image_url_fr)||c.image_url)||'';
+  document.getElementById('mName').textContent=(currentLang==='fr'&&c.name_fr)||c.name||'—';
   const badges=[
     `<span class="badge badge-rarity">${c.rarity||''}</span>`,
     `<span class="badge badge-set">${c.set_id||''}</span>`,
