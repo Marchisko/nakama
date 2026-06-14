@@ -10,11 +10,20 @@ print("Demarrage mise a jour prix Pokemon...")
 all_cards = []
 page = 1
 while True:
-    r = requests.get("https://api.pokemontcg.io/v2/cards", params={
-        'page': page, 'pageSize': 250,
-        'select': 'id,tcgplayer,cardmarket'
-    }, timeout=30)
-    data = r.json()
+    for attempt in range(5):
+        try:
+            r = requests.get("https://api.pokemontcg.io/v2/cards", params={
+                'page': page, 'pageSize': 250,
+                'select': 'id,tcgplayer,cardmarket'
+            }, timeout=60)
+            data = r.json()
+            break
+        except Exception as e:
+            print("Retry page", page, "attempt", attempt+1, str(e)[:60])
+            time.sleep(5 * (attempt + 1))
+    else:
+        print("Page", page, "failed after 5 attempts, stopping")
+        break
     cards = data.get('data', [])
     if not cards:
         break
