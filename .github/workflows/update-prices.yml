@@ -26,4 +26,5 @@ jobs:
         env:
           SB_URL: ${{ secrets.SB_URL }}
           SB_KEY: ${{ secrets.SB_KEY }}
+          POKEMONTCG_API_KEY: ${{ secrets.POKEMONTCG_API_KEY }}
         run: python scripts/update_pokemon_prices.py
