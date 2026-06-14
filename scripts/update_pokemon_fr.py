@@ -11,66 +11,59 @@ session = requests.Session()
 retry = Retry(total=3, backoff_factor=2, status_forcelist=[500, 502, 503, 504])
 session.mount("https://", HTTPAdapter(max_retries=retry))
 
-TCGDEX_BASE = "https://api.tcgdex.net/v2/fr/cards"
+# 1. Récupère tous les sets depuis TCGdex FR
+print("Fetch sets TCGdex FR...")
+r = session.get("https://api.tcgdex.net/v2/fr/sets", timeout=60)
+sets = r.json()
+print(f"Sets trouvés: {len(sets)}")
 
-print("Fetch toutes les cartes FR depuis TCGdex...")
-
-# Fetch toutes les cartes FR en une seule requête (liste légère)
-r = session.get(TCGDEX_BASE, timeout=60)
-all_fr = r.json()
-print(f"Total cartes TCGdex FR: {len(all_fr)}")
-
-# Construire un dict id -> {name, image}
-fr_data = {}
-for c in all_fr:
-    cid = c.get('id')
-    if not cid:
-        continue
-    name = c.get('name')
-    img = c.get('image')
-    if img:
-        img = img + "/high.webp"
-    fr_data[cid] = {'name_fr': name, 'image_url_fr': img}
-
-print(f"Cartes avec données FR: {len(fr_data)}")
-
-# Fetch les card_ids Pokémon depuis Supabase par batch
-offset = 0
-batch_size = 1000
 updated = 0
-no_match = 0
+no_img = 0
+errors = 0
 
-while True:
-    res = sb.table('cards').select('id').eq('game', 'pokemon').range(offset, offset + batch_size - 1).execute()
-    rows = res.data
-    if not rows:
-        break
+# 2. Pour chaque set, fetch les cartes FR
+for s in sets:
+    set_id = s.get('id')
+    if not set_id:
+        continue
+    try:
+        r = session.get(f"https://api.tcgdex.net/v2/fr/sets/{set_id}", timeout=60)
+        if r.status_code != 200:
+            continue
+        data = r.json()
+        cards = data.get('cards', [])
+        if not cards:
+            continue
 
-    upsert_rows = []
-    for row in rows:
-        cid = row['id']
-        if cid in fr_data:
-            upsert_rows.append({
-                'id': cid,
-                'name_fr': fr_data[cid]['name_fr'],
-                'image_url_fr': fr_data[cid]['image_url_fr'],
-            })
-            updated += 1
-        else:
-            no_match += 1
+        rows = []
+        for c in cards:
+            cid = c.get('id')
+            name_fr = c.get('name')
+            image = c.get('image')
+            image_url_fr = (image + "/high.webp") if image else None
 
-    if upsert_rows:
-        # Update par batch de 100
-        for i in range(0, len(upsert_rows), 100):
-            batch = upsert_rows[i:i+100]
-            try:
-                sb.table('cards').upsert(batch, on_conflict='id').execute()
-            except Exception as e:
-                print(f"Erreur batch {i}: {str(e)[:80]}")
+            if cid and (name_fr or image_url_fr):
+                rows.append({
+                    'id': cid,
+                    'name_fr': name_fr,
+                    'image_url_fr': image_url_fr,
+                })
 
-    print(f"Offset {offset}: {len(rows)} cartes traitées | {updated} mises à jour | {no_match} sans match")
-    offset += batch_size
-    if len(rows) < batch_size:
-        break
+        if rows:
+            for i in range(0, len(rows), 100):
+                batch = rows[i:i+100]
+                try:
+                    sb.table('cards').upsert(batch, on_conflict='id').execute()
+                    updated += len(batch)
+                except Exception as e:
+                    print(f"Erreur upsert {set_id}: {str(e)[:80]}")
+                    errors += 1
 
-print(f"TERMINE: {updated} cartes FR injectées | {no_match} sans correspondance TCGdex")
+        print(f"Set {set_id}: {len(rows)} cartes FR injectées")
+        time.sleep(0.2)
+
+    except Exception as e:
+        print(f"Erreur set {set_id}: {str(e)[:80]}")
+        errors += 1
+
+print(f"\nTERMINE: {updated} cartes FR injectées | {errors} erreurs")
