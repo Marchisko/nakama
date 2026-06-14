@@ -7,7 +7,10 @@ SB_URL = os.environ['SB_URL']
 SB_KEY = os.environ['SB_KEY']
 sb = create_client(SB_URL, SB_KEY)
 
-# Session avec retry automatique sur les erreurs réseau
+headers = {}
+if os.environ.get('POKEMONTCG_API_KEY'):
+    headers['X-Api-Key'] = os.environ['POKEMONTCG_API_KEY']
+
 session = requests.Session()
 retry = Retry(total=3, backoff_factor=3, status_forcelist=[500, 502, 503, 504])
 session.mount("https://", HTTPAdapter(max_retries=retry))
@@ -19,7 +22,7 @@ page = 1
 while True:
     for attempt in range(5):
         try:
-            r = session.get("https://api.pokemontcg.io/v2/cards", params={
+            r = session.get("https://api.pokemontcg.io/v2/cards", headers=headers, params={
                 'page': page, 'pageSize': 250,
                 'select': 'id,tcgplayer,cardmarket'
             }, timeout=90)
