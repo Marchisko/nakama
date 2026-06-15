@@ -16,28 +16,44 @@ r = session.get("https://api.tcgdex.net/v2/fr/sets", timeout=60)
 sets = r.json()
 print(f"Sets trouvés: {len(sets)}")
 
-# Debug: affiche les 3 premiers sets et leurs cartes
-for s in sets[:3]:
-    set_id = s.get('id')
-    print(f"\nTest set: {set_id}")
-    r2 = session.get(f"https://api.tcgdex.net/v2/fr/sets/{set_id}", timeout=60)
-    data = r2.json()
-    cards = data.get('cards', [])
-    print(f"Cartes dans set: {len(cards)}")
-    if cards:
-        print(f"Exemple carte: {cards[0]}")
-        # Test upsert direct
-        c = cards[0]
-        cid = c.get('id')
-        name_fr = c.get('name')
-        image = c.get('image')
-        image_url_fr = (image + "/high.webp") if image else None
-        print(f"ID: {cid}, name_fr: {name_fr}, image_url_fr: {image_url_fr}")
-        try:
-            res = sb.table('cards').upsert({'id': cid, 'name_fr': name_fr, 'image_url_fr': image_url_fr}, on_conflict='id').execute()
-            print(f"Upsert result: {res}")
-        except Exception as e:
-            print(f"Erreur upsert: {e}")
-    time.sleep(0.5)
+updated = 0
+errors = 0
 
-print("\nDEBUG TERMINE")
+for s in sets:
+    set_id = s.get('id')
+    if not set_id:
+        continue
+    try:
+        r = session.get(f"https://api.tcgdex.net/v2/fr/sets/{set_id}", timeout=60)
+        if r.status_code != 200:
+            continue
+        data = r.json()
+        cards = data.get('cards', [])
+        if not cards:
+            continue
+
+        for c in cards:
+            cid = c.get('id')
+            name_fr = c.get('name')
+            image = c.get('image')
+            image_url_fr = (image + "/high.webp") if image else None
+            if not cid:
+                continue
+            try:
+                sb.table('cards').update({
+                    'name_fr': name_fr,
+                    'image_url_fr': image_url_fr,
+                }).eq('id', cid).execute()
+                updated += 1
+            except Exception as e:
+                print(f"Erreur update {cid}: {str(e)[:80]}")
+                errors += 1
+
+        print(f"Set {set_id}: {len(cards)} cartes | total: {updated}")
+        time.sleep(0.2)
+
+    except Exception as e:
+        print(f"Erreur set {set_id}: {str(e)[:80]}")
+        errors += 1
+
+print(f"\nTERMINE: {updated} cartes FR mises à jour | {errors} erreurs")
