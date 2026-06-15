@@ -398,6 +398,12 @@ body::before{display:none;}
   </div>
   <div class="page-inner" style="padding-top:16px;">
 
+    <!-- Valeur totale -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-bottom:16px;">
+      <div style="font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Valeur totale de la collection</div>
+      <div id="collTotalValue"><div style="color:var(--text-dim);font-size:13px;">Chargement...</div></div>
+    </div>
+
     <!-- Dashboard One Piece -->
     <div style="margin-bottom:8px;">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
@@ -1064,6 +1070,51 @@ async function renderCollectionPage(){
   document.getElementById('portfolioValuePK').textContent = pk.value>0 ? `${pk.value.toFixed(2)} €` : '— €';
   document.getElementById('portfolioSubPK').textContent = pk.priced>0 ? `${pk.priced} carte${pk.priced>1?'s':''} évaluée${pk.priced>1?'s':''}` : `${pk.unique||0} cartes · valeur non disponible`;
 
+  // Valeur totale combinée + fluctuation
+  const totalValue = (op.value||0) + (pk.value||0);
+  const todayKey = new Date().toISOString().slice(0,10);
+  const snapshotKey = 'nakama_value_snapshot';
+  const snapshot = JSON.parse(localStorage.getItem(snapshotKey)||'{}');
+  if(totalValue > 0) {
+    snapshot[todayKey] = totalValue;
+    const keys = Object.keys(snapshot).sort();
+    if(keys.length > 7) delete snapshot[keys[0]];
+    localStorage.setItem(snapshotKey, JSON.stringify(snapshot));
+  }
+  const yesterday = new Date(Date.now()-86400000).toISOString().slice(0,10);
+  const yesterdayVal = snapshot[yesterday];
+  let fluctHTML = '';
+  if(yesterdayVal && totalValue > 0) {
+    const diff = totalValue - yesterdayVal;
+    const pct = ((diff/yesterdayVal)*100).toFixed(1);
+    const sign = diff >= 0 ? '+' : '';
+    const color = diff >= 0 ? 'var(--green)' : 'var(--red)';
+    fluctHTML = `<div style="font-size:12px;color:${color};font-weight:600;margin-top:2px;">${sign}${diff.toFixed(2)} € (${sign}${pct}%) vs hier</div>`;
+  }
+  const totalEl = document.getElementById('collTotalValue');
+  if(totalEl) {
+    if(!isPremium) {
+      totalEl.innerHTML = `
+        <div style="position:relative;overflow:hidden;border-radius:10px;">
+          <div style="filter:blur(5px);pointer-events:none;user-select:none;">
+            <div style="font-size:24px;font-weight:700;color:var(--navy);font-family:Georgia,serif;">999.99 €</div>
+            <div style="font-size:12px;color:var(--green);font-weight:600;margin-top:2px;">+12.50 € (+1.3%) vs hier</div>
+          </div>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:16px;">🔒</span>
+              <span style="font-size:12px;font-weight:700;color:var(--navy);">${currentLang==='fr'?'Valeur Premium':'Premium value'}</span>
+            </div>
+            <button onclick="switchPageById('pagePremium')" style="background:var(--gold);border:none;color:#1a1a2e;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">✦ Débloquer</button>
+          </div>
+        </div>`;
+    } else if(totalValue > 0) {
+      totalEl.innerHTML = `<div style="font-size:24px;font-weight:700;color:var(--navy);font-family:Georgia,serif;">${totalValue.toFixed(2)} €</div>${fluctHTML}`;
+    } else {
+      totalEl.innerHTML = `<div style="color:var(--text-dim);font-size:13px;">${currentLang==='fr'?'Ajoute des cartes pour voir la valeur':'Add cards to see your value'}</div>`;
+    }
+  }
+
   renderCollectionList();
 }
 function removeCollection(e,id){
@@ -1122,15 +1173,47 @@ async function renderProfilPage(){
   items.forEach(i=>{const r=i.card.rarity||'Common';rarityCounts[r]=(rarityCounts[r]||0)+i.qty;});
   const maxCount=Math.max(...Object.values(rarityCounts),1);
   const emptyState = (msg) => `<div class="profil-empty">${msg}</div>`;
-  document.getElementById('profilRarityBars').innerHTML=RARITY_ORDER.filter(r=>rarityCounts[r]).map(r=>`
+  const rarityBarsEl = document.getElementById('profilRarityBars');
+  const topCardsEl = document.getElementById('profilTopCards');
+  const setProgressEl = document.getElementById('profilSetProgress');
+
+  const premiumLock = (el, fakeContent) => {
+    el.innerHTML = `
+      <div style="position:relative;overflow:hidden;border-radius:10px;">
+        <div style="filter:blur(4px);pointer-events:none;user-select:none;opacity:0.6;">${fakeContent}</div>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(245,245,247,0.5);backdrop-filter:blur(2px);">
+          <div style="font-size:22px;margin-bottom:6px;">🔒</div>
+          <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px;">${currentLang==='fr'?'Fonctionnalité Premium':'Premium feature'}</div>
+          <button onclick="switchPageById('pagePremium')" style="background:var(--gold);border:none;color:#1a1a2e;padding:7px 16px;border-radius:8px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">✦ Débloquer</button>
+        </div>
+      </div>`;
+  };
+
+  const rarityFake = `
+    <div class="rarity-bar-row"><div class="rarity-bar-label">Secret Rare</div><div class="rarity-bar-track"><div class="rarity-bar-fill" style="width:30%;background:#c0392b;"></div></div><div class="rarity-bar-count">3</div></div>
+    <div class="rarity-bar-row"><div class="rarity-bar-label">Super Rare</div><div class="rarity-bar-track"><div class="rarity-bar-fill" style="width:55%;background:#b45309;"></div></div><div class="rarity-bar-count">8</div></div>
+    <div class="rarity-bar-row"><div class="rarity-bar-label">Rare</div><div class="rarity-bar-track"><div class="rarity-bar-fill" style="width:100%;background:#6b7280;"></div></div><div class="rarity-bar-count">21</div></div>`;
+
+  const topCardsFake = `
+    <div class="top-card-row"><div style="width:40px;height:56px;background:var(--bg3);border-radius:6px;"></div><div class="top-card-info"><div class="top-card-name">████████</div><div class="top-card-meta">██ · Secret Rare</div></div><span class="badge badge-rarity">SR</span></div>
+    <div class="top-card-row" style="margin-top:8px;"><div style="width:40px;height:56px;background:var(--bg3);border-radius:6px;"></div><div class="top-card-info"><div class="top-card-name">██████</div><div class="top-card-meta">██ · Super Rare</div></div><span class="badge badge-rarity">R</span></div>`;
+
+  const setProgressFake = `
+    <div class="set-progress-row"><div class="set-progress-header"><span class="set-progress-name">OP01</span><span class="set-progress-pct">12/102 · 12%</span></div><div class="set-progress-track"><div class="set-progress-fill" style="width:12%"></div></div></div>
+    <div class="set-progress-row"><div class="set-progress-header"><span class="set-progress-name">OP02</span><span class="set-progress-pct">8/121 · 7%</span></div><div class="set-progress-track"><div class="set-progress-fill" style="width:7%"></div></div></div>`;
+
+  if(!isPremium) {
+    premiumLock(rarityBarsEl, rarityFake);
+    premiumLock(topCardsEl, topCardsFake);
+    premiumLock(setProgressEl, setProgressFake);
+  } else {
+    rarityBarsEl.innerHTML=RARITY_ORDER.filter(r=>rarityCounts[r]).map(r=>`
     <div class="rarity-bar-row">
       <div class="rarity-bar-label">${RARITY_LABELS[r]}</div>
       <div class="rarity-bar-track"><div class="rarity-bar-fill" style="width:${Math.round(rarityCounts[r]/maxCount*100)}%;background:${RARITY_COLORS[r]};"></div></div>
       <div class="rarity-bar-count">${rarityCounts[r]}</div>
     </div>`).join('') || emptyState('Ajoute des cartes pour voir la répartition');
-  const rarityRank={'SecretRare':0,'Leader':1,'SuperRare':2,'Special':3,'Rare':4,'Uncommon':5,'Common':6};
-  const topCards=[...items].sort((a,b)=>(rarityRank[a.card.rarity]??9)-(rarityRank[b.card.rarity]??9)).slice(0,5);
-  document.getElementById('profilTopCards').innerHTML=topCards.length?topCards.map(item=>`
+    topCardsEl.innerHTML=topCards.length?topCards.map(item=>`
     <div class="top-card-row" onclick="openModal(${JSON.stringify(item.card).replace(/"/g,'&quot;')})">
       <img class="top-card-thumb" src="${imgUrl(item.card.image_url)||''}" onerror="this.style.opacity=0">
       <div class="top-card-info">
@@ -1140,27 +1223,27 @@ async function renderProfilPage(){
       <span class="badge badge-rarity" style="font-size:9.5px;">${RARITY_LABELS[item.card.rarity]||''}</span>
     </div>`).join('')
     : emptyState('Tes cartes les plus rares apparaîtront ici');
-  const sets=new Set(items.map(i=>i.card.set_id));
-  const setProgress=document.getElementById('profilSetProgress');
-  if(!items.length){setProgress.innerHTML=emptyState('Ajoute des cartes pour suivre ta progression');
-  }else{
-    const setIds=[...sets];
-    const ownedBySet={};
-    items.forEach(i=>{const s=i.card.set_id;ownedBySet[s]=(ownedBySet[s]||0)+1;});
-    const setTotals={};
-    await Promise.all(setIds.map(async s=>{
-      const r=await fetch(`${SB_URL}/rest/v1/cards?set_id=eq.${s}&select=id`,{
-        headers:{"apikey":SB_KEY,"Authorization":`Bearer ${SB_KEY}`,"Prefer":"count=exact","Range":"0-0"}
-      });
-      setTotals[s]=parseInt(r.headers.get('content-range')?.split('/')[1]||'0');
-    }));
-    setProgress.innerHTML=setIds.sort().map(s=>{
-      const owned=ownedBySet[s]||0;const total=setTotals[s]||0;const pct=total?Math.round(owned/total*100):0;
-      return `<div class="set-progress-row">
-        <div class="set-progress-header"><span class="set-progress-name">${s}</span><span class="set-progress-pct">${owned}/${total} · ${pct}%</span></div>
-        <div class="set-progress-track"><div class="set-progress-fill" style="width:${pct}%"></div></div>
-      </div>`;
-    }).join('');
+    const sets=new Set(items.map(i=>i.card.set_id));
+    if(!items.length){setProgressEl.innerHTML=emptyState('Ajoute des cartes pour suivre ta progression');
+    }else{
+      const setIds=[...sets];
+      const ownedBySet={};
+      items.forEach(i=>{const s=i.card.set_id;ownedBySet[s]=(ownedBySet[s]||0)+1;});
+      const setTotals={};
+      await Promise.all(setIds.map(async s=>{
+        const r=await fetch(`${SB_URL}/rest/v1/cards?set_id=eq.${s}&select=id`,{
+          headers:{"apikey":SB_KEY,"Authorization":`Bearer ${SB_KEY}`,"Prefer":"count=exact","Range":"0-0"}
+        });
+        setTotals[s]=parseInt(r.headers.get('content-range')?.split('/')[1]||'0');
+      }));
+      setProgressEl.innerHTML=setIds.sort().map(s=>{
+        const owned=ownedBySet[s]||0;const total=setTotals[s]||0;const pct=total?Math.round(owned/total*100):0;
+        return `<div class="set-progress-row">
+          <div class="set-progress-header"><span class="set-progress-name">${s}</span><span class="set-progress-pct">${owned}/${total} · ${pct}%</span></div>
+          <div class="set-progress-track"><div class="set-progress-fill" style="width:${pct}%"></div></div>
+        </div>`;
+      }).join('');
+    }
   }
   const wishItems=Object.values(wishlist);
   document.getElementById('profilWishSummary').innerHTML=wishItems.length
@@ -1355,11 +1438,19 @@ fetchCards();
 // ===== SUPABASE AUTH CLIENT =====
 const sbClient = supabase.createClient(SB_URL, SB_KEY);
 let currentUser = null;
+let isPremium = false;
 let authMode = 'login';
+
+async function fetchPremiumStatus() {
+  if (!currentUser) { isPremium = false; return; }
+  const { data } = await sbClient.from('profiles').select('is_premium').eq('id', currentUser.id).single();
+  isPremium = data?.is_premium || false;
+}
 
 // Init auth state
 sbClient.auth.onAuthStateChange(async (event, session) => {
   currentUser = session?.user || null;
+  await fetchPremiumStatus();
   updateUserBtn();
   if (currentUser) {
     await loadFromSupabase();
@@ -1371,6 +1462,7 @@ sbClient.auth.onAuthStateChange(async (event, session) => {
 (async () => {
   const { data: { session } } = await sbClient.auth.getSession();
   currentUser = session?.user || null;
+  await fetchPremiumStatus();
   updateUserBtn();
   if (currentUser) {
     await loadFromSupabase();
@@ -1521,6 +1613,7 @@ async function migrateLocalData() {
 let scanStream=null;let tesseractWorker=null;
 
 async function openScan(){
+  if(!requirePremium()) return;
   const overlay=document.getElementById('scanOverlay');
   overlay.classList.add('open');
   document.getElementById('scanStatus').textContent='Démarrage caméra...';
@@ -1700,8 +1793,26 @@ function switchPageById(pageId){
   document.getElementById(pageId).classList.add('active');
 }
 
+function requirePremium(action) {
+  if (!currentUser) {
+    showToast(currentLang==='fr'?'Crée un compte pour continuer':'Create an account to continue');
+    setTimeout(()=>openAuth(), 600);
+    return false;
+  }
+  if (!isPremium) {
+    switchPageById('pagePremium');
+    showToast(currentLang==='fr'?'Fonctionnalité Premium ✦':'Premium feature ✦');
+    return false;
+  }
+  return true;
+}
+
 function handlePremium(plan){
-  // Placeholder — à connecter avec RevenueCat ou Stripe lors du lancement
+  if(!currentUser){
+    showToast(currentLang==='fr'?'Crée un compte pour accéder à Premium':'Create an account to access Premium');
+    setTimeout(()=>openAuth(),600);
+    return;
+  }
   showToast(currentLang==='fr'?'Bientôt disponible !':'Coming soon!');
 }
 
