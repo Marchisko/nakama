@@ -1173,19 +1173,19 @@ async function renderProfilPage(){
 
   // Stats OP
   const op = await calcGameValue('onepiece');
-  document.getElementById('profilTotalOP').textContent = op.total||0;
-  document.getElementById('profilUniqueOP').textContent = op.unique||0;
-  document.getElementById('profilSetsOP').textContent = op.sets||0;
-  document.getElementById('profilValueOP').textContent = op.value>0 ? `${op.value.toFixed(2)} €` : '— €';
-  document.getElementById('profilValueSubOP').textContent = op.priced>0 ? `${op.priced} carte${op.priced>1?'s':''} évaluée${op.priced>1?'s':''}` : `${op.unique||0} cartes`;
+  if(document.getElementById('profilTotalOP')) document.getElementById('profilTotalOP').textContent = op.total||0;
+  if(document.getElementById('profilUniqueOP')) document.getElementById('profilUniqueOP').textContent = op.unique||0;
+  if(document.getElementById('profilSetsOP')) document.getElementById('profilSetsOP').textContent = op.sets||0;
+  if(document.getElementById('profilValueOP')) document.getElementById('profilValueOP').textContent = op.value>0 ? `${op.value.toFixed(2)} €` : '— €';
+  if(document.getElementById('profilValueSubOP')) document.getElementById('profilValueSubOP').textContent = op.priced>0 ? `${op.priced} carte${op.priced>1?'s':''} évaluée${op.priced>1?'s':''}` : `${op.unique||0} cartes`;
 
   // Stats PK
   const pk = await calcGameValue('pokemon');
-  document.getElementById('profilTotalPK').textContent = pk.total||0;
-  document.getElementById('profilUniquePK').textContent = pk.unique||0;
-  document.getElementById('profilSetsPK').textContent = pk.sets||0;
-  document.getElementById('profilValuePK').textContent = pk.value>0 ? `${pk.value.toFixed(2)} €` : '— €';
-  document.getElementById('profilValueSubPK').textContent = pk.priced>0 ? `${pk.priced} carte${pk.priced>1?'s':''} évaluée${pk.priced>1?'s':''}` : `${pk.unique||0} cartes`;
+  if(document.getElementById('profilTotalPK')) document.getElementById('profilTotalPK').textContent = pk.total||0;
+  if(document.getElementById('profilUniquePK')) document.getElementById('profilUniquePK').textContent = pk.unique||0;
+  if(document.getElementById('profilSetsPK')) document.getElementById('profilSetsPK').textContent = pk.sets||0;
+  if(document.getElementById('profilValuePK')) document.getElementById('profilValuePK').textContent = pk.value>0 ? `${pk.value.toFixed(2)} €` : '— €';
+  if(document.getElementById('profilValueSubPK')) document.getElementById('profilValueSubPK').textContent = pk.priced>0 ? `${pk.priced} carte${pk.priced>1?'s':''} évaluée${pk.priced>1?'s':''}` : `${pk.unique||0} cartes`;
 
   const rarityCounts={};
   items.forEach(i=>{const r=i.card.rarity||'Common';rarityCounts[r]=(rarityCounts[r]||0)+i.qty;});
@@ -1268,9 +1268,19 @@ async function renderProfilPage(){
     ?`<span style="color:var(--pink);font-size:22px;font-weight:700;">${wishItems.length}</span> carte${wishItems.length>1?'s':''} sur ta wishlist`
     : emptyState('Ajoute des cartes à ta wishlist');
 
-  // Cacher le teaser si déjà Premium
+  // Teaser Premium
   const teaser = document.getElementById('premiumTeaser');
-  if (teaser) teaser.style.display = isPremium ? 'none' : '';
+  if (teaser) {
+    if(isPremium) {
+      teaser.style.display = 'none';
+    } else if(!currentUser) {
+      teaser.style.display = '';
+      teaser.querySelector('.premium-teaser-title').textContent = 'Débloquez tout le potentiel';
+      teaser.querySelector('.premium-teaser-sub').textContent = 'Crée un compte gratuit pour commencer';
+    } else {
+      teaser.style.display = '';
+    }
+  }
 
   // Top movers + graphique 30j
   await renderTopMovers();
@@ -1682,17 +1692,21 @@ function closeAuth() {
 async function sendResetPassword() {
   const email = document.getElementById('authEmail').value.trim();
   const errEl = document.getElementById('authError');
-  if (!email) { errEl.textContent = 'Entre ton email d\'abord'; return; }
+  if (!email) { errEl.textContent = "Entre ton email d'abord"; return; }
   errEl.textContent = '';
-  const { error } = await sbClient.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin
-  });
-  if (error) {
-    errEl.textContent = error.message;
-  } else {
-    errEl.style.color = 'var(--green)';
-    errEl.textContent = '✓ Email envoyé ! Vérifie ta boîte mail.';
-    setTimeout(() => { errEl.style.color = ''; errEl.textContent = ''; }, 4000);
+  try {
+    const { error } = await sbClient.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin
+    });
+    if (error) {
+      errEl.textContent = error.message;
+    } else {
+      errEl.style.color = 'var(--green)';
+      errEl.textContent = '✓ Email envoyé ! Vérifie ta boîte mail.';
+      setTimeout(() => { errEl.style.color = ''; errEl.textContent = ''; }, 4000);
+    }
+  } catch(e) {
+    errEl.textContent = 'Erreur réseau';
   }
 }
 
