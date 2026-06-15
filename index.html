@@ -302,7 +302,7 @@ body::before{display:none;}
 .focus-ring{position:absolute;width:60px;height:60px;border:2px solid #fff;border-radius:8px;pointer-events:none;opacity:0;transition:opacity .3s;transform:translate(-50%,-50%);}
 .auth-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.4);backdrop-filter:blur(8px);justify-content:center;align-items:center;padding:20px;}
 .auth-overlay.open{display:flex;}
-.auth-box{background:var(--bg2);border:1px solid var(--border);border-radius:24px;padding:32px 24px;width:100%;max-width:380px;}
+.auth-box{background:var(--bg2);border:1px solid var(--border);border-radius:24px;padding:32px 24px;width:100%;max-width:380px;overflow-y:auto;max-height:90vh;}
 .auth-logo{font-size:22px;font-weight:700;color:var(--navy);text-align:center;margin-bottom:4px;}
 .auth-logo span{color:var(--gold);}
 .auth-sub{font-size:12px;color:var(--text-dim);text-align:center;margin-bottom:24px;}
@@ -368,7 +368,7 @@ body::before{display:none;}
       <div class="page-hero-img-overlay"></div>
     </div>
     <div class="page-hero-content">
-      <div class="page-hero-eyebrow">Grand Line Collection</div>
+      <div class="page-hero-eyebrow" id="heroEyebrowEl">Grand Line Collection</div>
       <div class="page-hero-sub" id="heroSub">Chargement...</div>
     </div>
   </div>
@@ -824,6 +824,9 @@ async function switchGame(game){
   document.getElementById('btnPK').classList.toggle('active',game==='pokemon');
   st={rarity:null,set:null,search:'',offset:0,total:0};
   document.getElementById('searchInput').value='';
+  // Update hero eyebrow
+  const eyebrow = document.getElementById('heroEyebrowEl');
+  if(eyebrow) eyebrow.textContent = game==='pokemon' ? 'Pokémon Collection' : 'Grand Line Collection';
   // Swap hero image
   const heroImg=document.getElementById('heroImg');
   if(heroImg){
