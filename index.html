@@ -682,6 +682,9 @@ body::before{display:none;}
     </div>
     <div class="auth-error" id="authError"></div>
     <button class="auth-submit" id="authSubmit" onclick="submitAuth()">Se connecter</button>
+    <div style="text-align:center;margin-top:12px;">
+      <button onclick="sendResetPassword()" id="forgotBtn" style="background:none;border:none;color:var(--text-dim);font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;text-decoration:underline;">Mot de passe oublié ?</button>
+    </div>
     <span class="auth-skip" onclick="closeAuth()">Continuer sans compte</span>
   </div>
 </div>
@@ -1673,12 +1676,30 @@ function openAuth() {
 function closeAuth() {
   document.getElementById('authOverlay').classList.remove('open');
 }
+async function sendResetPassword() {
+  const email = document.getElementById('authEmail').value.trim();
+  const errEl = document.getElementById('authError');
+  if (!email) { errEl.textContent = 'Entre ton email d\'abord'; return; }
+  errEl.textContent = '';
+  const { error } = await sbClient.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin
+  });
+  if (error) {
+    errEl.textContent = error.message;
+  } else {
+    errEl.style.color = 'var(--green)';
+    errEl.textContent = '✓ Email envoyé ! Vérifie ta boîte mail.';
+    setTimeout(() => { errEl.style.color = ''; errEl.textContent = ''; }, 4000);
+  }
+}
+
 function switchAuthTab(mode, btn) {
   authMode = mode;
   document.querySelectorAll('.auth-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('authSubmit').textContent = mode === 'login' ? 'Se connecter' : "S'inscrire";
   document.getElementById('authError').textContent = '';
+  document.getElementById('forgotBtn').style.display = mode === 'login' ? '' : 'none';
 }
 
 async function submitAuth() {
