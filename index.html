@@ -530,8 +530,20 @@ body::before{display:none;}
       <div id="profilWishSummary" style="font-size:13px;color:var(--text-dim);"></div>
     </div>
 
+    <!-- Top movers Premium -->
+    <div class="pc" style="margin-top:0;">
+      <div class="pc-title" style="margin-bottom:14px;">📈 Top hausses & baisses du jour</div>
+      <div id="profilTopMovers"></div>
+    </div>
+
+    <!-- Price chart Premium -->
+    <div class="pc" style="margin-top:0;">
+      <div class="pc-title" style="margin-bottom:14px;">📊 Évolution de ta collection (30j)</div>
+      <div id="profilPriceChart"></div>
+    </div>
+
     <!-- Premium teaser -->
-    <div class="premium-teaser" onclick="switchPageById('pagePremium')">
+    <div class="premium-teaser" onclick="switchPageById('pagePremium')" id="premiumTeaser">
       <div class="premium-teaser-left">
         <div class="premium-teaser-eyebrow">✦ Nakama Premium</div>
         <div class="premium-teaser-title">Débloquez tout le potentiel</div>
@@ -1249,6 +1261,165 @@ async function renderProfilPage(){
   document.getElementById('profilWishSummary').innerHTML=wishItems.length
     ?`<span style="color:var(--pink);font-size:22px;font-weight:700;">${wishItems.length}</span> carte${wishItems.length>1?'s':''} sur ta wishlist`
     : emptyState('Ajoute des cartes à ta wishlist');
+
+  // Cacher le teaser si déjà Premium
+  const teaser = document.getElementById('premiumTeaser');
+  if (teaser) teaser.style.display = isPremium ? 'none' : '';
+
+  // Top movers + graphique 30j
+  await renderTopMovers();
+  await renderPriceChart();
+}
+
+async function renderTopMovers() {
+  const el = document.getElementById('profilTopMovers');
+  if (!el) return;
+
+  const fakeMoverContent = `
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:rgba(22,163,74,0.06);border-radius:8px;">
+        <div><div style="font-size:13px;font-weight:600;">████████████</div><div style="font-size:11px;color:var(--text-dim);">base1 · Rare</div></div>
+        <div style="color:var(--green);font-weight:700;font-size:13px;">+12.4%</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:rgba(22,163,74,0.06);border-radius:8px;">
+        <div><div style="font-size:13px;font-weight:600;">██████████</div><div style="font-size:11px;color:var(--text-dim);">swsh1 · Rare</div></div>
+        <div style="color:var(--green);font-weight:700;font-size:13px;">+8.1%</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:rgba(192,57,43,0.06);border-radius:8px;">
+        <div><div style="font-size:13px;font-weight:600;">███████████████</div><div style="font-size:11px;color:var(--text-dim);">sv1 · Ultra Rare</div></div>
+        <div style="color:var(--red);font-weight:700;font-size:13px;">-5.3%</div>
+      </div>
+    </div>`;
+
+  if (!isPremium) {
+    el.innerHTML = `
+      <div style="position:relative;overflow:hidden;border-radius:10px;">
+        <div style="filter:blur(4px);pointer-events:none;user-select:none;opacity:0.6;">${fakeMoverContent}</div>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(245,245,247,0.5);backdrop-filter:blur(2px);">
+          <div style="font-size:22px;margin-bottom:6px;">🔒</div>
+          <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px;">${currentLang==='fr'?'Fonctionnalité Premium':'Premium feature'}</div>
+          <button onclick="switchPageById('pagePremium')" style="background:var(--gold);border:none;color:#1a1a2e;padding:7px 16px;border-radius:8px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">✦ Débloquer</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  // Fetch price_history des 2 derniers jours pour les cartes de la collection
+  const cardIds = Object.keys(collection);
+  if (!cardIds.length) { el.innerHTML = emptyState('Ajoute des cartes pour voir les variations'); return; }
+
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/price_history?card_id=in.(${cardIds.slice(0,50).join(',')})&order=recorded_at.desc&limit=200`, {
+      headers: {"apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`}
+    });
+    const history = await r.json();
+
+    // Grouper par card_id, prendre les 2 dernières dates
+    const byCard = {};
+    history.forEach(h => {
+      if (!byCard[h.card_id]) byCard[h.card_id] = [];
+      byCard[h.card_id].push(h);
+    });
+
+    const movers = [];
+    Object.entries(byCard).forEach(([cid, records]) => {
+      if (records.length < 2) return;
+      const today = records[0].price_market_usd || records[0].price_en_usd;
+      const yesterday = records[1].price_market_usd || records[1].price_en_usd;
+      if (!today || !yesterday) return;
+      const pct = ((today - yesterday) / yesterday) * 100;
+      const card = collection[cid]?.card;
+      movers.push({ cid, pct, today, card });
+    });
+
+    movers.sort((a,b) => b.pct - a.pct);
+    const top3up = movers.slice(0, 3);
+    const top1down = movers.filter(m => m.pct < 0).sort((a,b) => a.pct - b.pct)[0];
+
+    const moverRow = (m, isDown=false) => {
+      const color = isDown ? 'var(--red)' : 'var(--green)';
+      const bg = isDown ? 'rgba(192,57,43,0.06)' : 'rgba(22,163,74,0.06)';
+      const sign = m.pct >= 0 ? '+' : '';
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:${bg};border-radius:8px;margin-bottom:6px;">
+        <div>
+          <div style="font-size:13px;font-weight:600;">${m.card?.name||m.cid}</div>
+          <div style="font-size:11px;color:var(--text-dim);">${m.card?.set_id||''} · ${(m.today*(currentGame==='pokemon'?0.92:1)).toFixed(2)} €</div>
+        </div>
+        <div style="color:${color};font-weight:700;font-size:13px;">${sign}${m.pct.toFixed(1)}%</div>
+      </div>`;
+    };
+
+    if (!top3up.length && !top1down) {
+      el.innerHTML = emptyState('Données insuffisantes — reviens demain');
+      return;
+    }
+    el.innerHTML = top3up.map(m => moverRow(m)).join('') + (top1down ? moverRow(top1down, true) : '');
+  } catch(e) {
+    el.innerHTML = emptyState('Données non disponibles');
+  }
+}
+
+async function renderPriceChart() {
+  const el = document.getElementById('profilPriceChart');
+  if (!el) return;
+
+  const fakeChartContent = `
+    <svg viewBox="0 0 300 80" style="width:100%;height:80px;">
+      <polyline points="0,60 30,50 60,45 90,40 120,42 150,35 180,30 210,25 240,20 270,22 300,15" fill="none" stroke="#c9a84c" stroke-width="2"/>
+      <polyline points="0,60 30,50 60,45 90,40 120,42 150,35 180,30 210,25 240,20 270,22 300,15" fill="url(#grad)" stroke="none" opacity="0.2"/>
+    </svg>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-top:4px;"><span>J-30</span><span>Aujourd'hui</span></div>`;
+
+  if (!isPremium) {
+    el.innerHTML = `
+      <div style="position:relative;overflow:hidden;border-radius:10px;">
+        <div style="filter:blur(3px);pointer-events:none;user-select:none;opacity:0.6;">${fakeChartContent}</div>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(245,245,247,0.5);backdrop-filter:blur(2px);">
+          <div style="font-size:22px;margin-bottom:6px;">🔒</div>
+          <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px;">${currentLang==='fr'?'Fonctionnalité Premium':'Premium feature'}</div>
+          <button onclick="switchPageById('pagePremium')" style="background:var(--gold);border:none;color:#1a1a2e;padding:7px 16px;border-radius:8px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">✦ Débloquer</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  // Fetch snapshots collection depuis localStorage
+  const snapshot = JSON.parse(localStorage.getItem('nakama_value_snapshot')||'{}');
+  const entries = Object.entries(snapshot).sort((a,b)=>a[0].localeCompare(b[0]));
+  if (entries.length < 2) {
+    el.innerHTML = emptyState('Données insuffisantes — le graphique se construit jour après jour');
+    return;
+  }
+
+  const vals = entries.map(([d,v])=>v);
+  const dates = entries.map(([d])=>d.slice(5)); // MM-DD
+  const min = Math.min(...vals);
+  const max = Math.max(...vals);
+  const range = max - min || 1;
+  const w = 300, h = 80, pad = 10;
+
+  const points = vals.map((v,i) => {
+    const x = pad + (i/(vals.length-1))*(w-2*pad);
+    const y = (h-pad) - ((v-min)/range)*(h-2*pad);
+    return `${x},${y}`;
+  }).join(' ');
+
+  const lastVal = vals[vals.length-1];
+  const firstVal = vals[0];
+  const totalPct = ((lastVal-firstVal)/firstVal*100).toFixed(1);
+  const color = lastVal >= firstVal ? 'var(--green)' : 'var(--red)';
+  const sign = lastVal >= firstVal ? '+' : '';
+
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div style="font-size:18px;font-weight:700;color:var(--navy);font-family:Georgia,serif;">${lastVal.toFixed(2)} €</div>
+      <div style="font-size:12px;font-weight:600;color:${color};">${sign}${totalPct}% sur ${entries.length}j</div>
+    </div>
+    <svg viewBox="0 0 ${w} ${h}" style="width:100%;height:80px;">
+      <defs><linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${lastVal>=firstVal?'#16a34a':'#c0392b'}" stop-opacity="0.3"/><stop offset="100%" stop-color="${lastVal>=firstVal?'#16a34a':'#c0392b'}" stop-opacity="0"/></linearGradient></defs>
+      <polyline points="${points}" fill="none" stroke="${lastVal>=firstVal?'#16a34a':'#c0392b'}" stroke-width="2" stroke-linejoin="round"/>
+    </svg>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-top:2px;"><span>${dates[0]}</span><span>Aujourd'hui</span></div>`;
 }
 
 function switchPage(page,navEl){
