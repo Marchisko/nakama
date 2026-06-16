@@ -398,10 +398,46 @@ body::before{display:none;}
   </div>
   <div class="page-inner" style="padding-top:16px;">
 
-    <!-- Valeur totale -->
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-bottom:16px;">
-      <div style="font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Valeur totale de la collection</div>
-      <div id="collTotalValue"><div style="color:var(--text-dim);font-size:13px;">Chargement...</div></div>
+    <!-- Valeur totale Premium -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-bottom:16px;position:relative;overflow:hidden;" id="collPremiumBlock">
+      <!-- Contenu flouté -->
+      <div id="collPremiumBlur">
+        <div style="font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Valeur totale de la collection</div>
+        <div style="filter:blur(6px);user-select:none;pointer-events:none;">
+          <div style="font-size:28px;font-weight:700;color:var(--navy);font-family:Georgia,serif;margin-bottom:2px;">1 247,83 €</div>
+          <div style="font-size:12px;color:#16a34a;font-weight:600;">+23,40 € (+1,9%) vs hier</div>
+          <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px;">
+            <div style="font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Top variations 24h</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:rgba(22,163,74,0.08);border-radius:8px;">
+                <div><div style="font-size:12px;font-weight:600;">Charizard</div><div style="font-size:10px;color:var(--text-dim);">base1 · Rare</div></div>
+                <div style="color:#16a34a;font-weight:700;font-size:12px;">+18,4%</div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:rgba(22,163,74,0.08);border-radius:8px;">
+                <div><div style="font-size:12px;font-weight:600;">Luffy OP01-003</div><div style="font-size:10px;color:var(--text-dim);">OP01 · Leader</div></div>
+                <div style="color:#16a34a;font-weight:700;font-size:12px;">+9,1%</div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:rgba(192,57,43,0.08);border-radius:8px;">
+                <div><div style="font-size:12px;font-weight:600;">Mewtwo EX</div><div style="font-size:10px;color:var(--text-dim);">xy · Ultra Rare</div></div>
+                <div style="color:#c0392b;font-weight:700;font-size:12px;">-6,2%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Overlay Premium -->
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.55);backdrop-filter:blur(1px);">
+          <div style="background:var(--bg2);border:1px solid var(--border-strong);border-radius:16px;padding:18px 24px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.08);max-width:240px;">
+            <div style="font-size:24px;margin-bottom:6px;">✦</div>
+            <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:4px;">Nakama Premium</div>
+            <div style="font-size:12px;color:var(--text-dim);margin-bottom:14px;">Valeur totale, fluctuations 24h et top variations de ta collection</div>
+            <button onclick="switchPageById('pagePremium')" style="background:var(--gold);border:none;color:#1a1a2e;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;width:100%;">Débloquer Premium</button>
+          </div>
+        </div>
+      </div>
+      <!-- Contenu réel (affiché si Premium) -->
+      <div id="collTotalValue" style="display:none;">
+        <div style="font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Valeur totale de la collection</div>
+      </div>
     </div>
 
     <!-- Dashboard One Piece -->
@@ -530,16 +566,64 @@ body::before{display:none;}
       <div id="profilWishSummary" style="font-size:13px;color:var(--text-dim);"></div>
     </div>
 
-    <!-- Top movers Premium -->
-    <div class="pc" style="margin-top:0;">
-      <div class="pc-title" style="margin-bottom:14px;">📈 Top hausses & baisses du jour</div>
-      <div id="profilTopMovers"></div>
+    <!-- Top movers Premium — statique blurré -->
+    <div class="pc" style="margin-top:0;position:relative;overflow:hidden;">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:14px;">📈 Top variations 24h / 30j</div>
+      <div style="filter:blur(5px);user-select:none;pointer-events:none;">
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(22,163,74,0.08);border-radius:8px;">
+            <div><div style="font-size:13px;font-weight:600;">Charizard</div><div style="font-size:11px;color:var(--text-dim);">base1 · Rare</div></div>
+            <div style="color:#16a34a;font-weight:700;">+18,4%</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(22,163,74,0.08);border-radius:8px;">
+            <div><div style="font-size:13px;font-weight:600;">Luffy OP01-003</div><div style="font-size:11px;color:var(--text-dim);">OP01 · Leader</div></div>
+            <div style="color:#16a34a;font-weight:700;">+9,1%</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(22,163,74,0.08);border-radius:8px;">
+            <div><div style="font-size:13px;font-weight:600;">Pikachu ex</div><div style="font-size:11px;color:var(--text-dim);">sv · Ultra Rare</div></div>
+            <div style="color:#16a34a;font-weight:700;">+5,3%</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(192,57,43,0.08);border-radius:8px;">
+            <div><div style="font-size:13px;font-weight:600;">Mewtwo EX</div><div style="font-size:11px;color:var(--text-dim);">xy · Ultra Rare</div></div>
+            <div style="color:#c0392b;font-weight:700;">-6,2%</div>
+          </div>
+        </div>
+      </div>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);backdrop-filter:blur(1px);">
+        <div style="background:var(--bg2);border:1px solid var(--border-strong);border-radius:14px;padding:16px 20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+          <div style="font-size:20px;margin-bottom:4px;">✦</div>
+          <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px;">Fonctionnalité Premium</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-bottom:12px;">Top 3 hausses & baisses de ta collection</div>
+          <button onclick="switchPageById('pagePremium')" style="background:var(--gold);border:none;color:#1a1a2e;padding:9px 18px;border-radius:9px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">Débloquer Premium</button>
+        </div>
+      </div>
+      <!-- Contenu réel (injecté par JS si Premium) -->
+      <div id="profilTopMovers" style="display:none;"></div>
     </div>
 
-    <!-- Price chart Premium -->
-    <div class="pc" style="margin-top:0;">
-      <div class="pc-title" style="margin-bottom:14px;">📊 Évolution de ta collection (30j)</div>
-      <div id="profilPriceChart"></div>
+    <!-- Graphique 30j Premium — statique blurré -->
+    <div class="pc" style="margin-top:0;position:relative;overflow:hidden;">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:14px;">📊 Évolution de ta collection (30j)</div>
+      <div style="filter:blur(4px);user-select:none;pointer-events:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-size:22px;font-weight:700;color:var(--navy);font-family:Georgia,serif;">1 247,83 €</div>
+          <div style="font-size:12px;font-weight:600;color:#16a34a;">+4,2% sur 30j</div>
+        </div>
+        <svg viewBox="0 0 300 70" style="width:100%;height:70px;">
+          <polyline points="0,55 30,48 60,42 90,38 120,44 150,32 180,28 210,22 240,18 270,24 300,14" fill="none" stroke="#c9a84c" stroke-width="2" stroke-linejoin="round"/>
+        </svg>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-top:4px;"><span>J-30</span><span>Aujourd'hui</span></div>
+      </div>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);backdrop-filter:blur(1px);">
+        <div style="background:var(--bg2);border:1px solid var(--border-strong);border-radius:14px;padding:16px 20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+          <div style="font-size:20px;margin-bottom:4px;">✦</div>
+          <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px;">Fonctionnalité Premium</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-bottom:12px;">Graphique d'évolution sur 30 jours</div>
+          <button onclick="switchPageById('pagePremium')" style="background:var(--gold);border:none;color:#1a1a2e;padding:9px 18px;border-radius:9px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">Débloquer Premium</button>
+        </div>
+      </div>
+      <!-- Contenu réel (injecté par JS si Premium) -->
+      <div id="profilPriceChart" style="display:none;"></div>
     </div>
 
     <!-- Premium teaser -->
@@ -1088,48 +1172,36 @@ async function renderCollectionPage(){
   document.getElementById('portfolioValuePK').textContent = pk.value>0 ? `${pk.value.toFixed(2)} €` : '— €';
   document.getElementById('portfolioSubPK').textContent = pk.priced>0 ? `${pk.priced} carte${pk.priced>1?'s':''} évaluée${pk.priced>1?'s':''}` : `${pk.unique||0} cartes · valeur non disponible`;
 
-  // Valeur totale combinée + fluctuation
-  const totalValue = (op.value||0) + (pk.value||0);
-  const todayKey = new Date().toISOString().slice(0,10);
-  const snapshotKey = 'nakama_value_snapshot';
-  const snapshot = JSON.parse(localStorage.getItem(snapshotKey)||'{}');
-  if(totalValue > 0) {
-    snapshot[todayKey] = totalValue;
-    const keys = Object.keys(snapshot).sort();
-    if(keys.length > 7) delete snapshot[keys[0]];
-    localStorage.setItem(snapshotKey, JSON.stringify(snapshot));
-  }
-  const yesterday = new Date(Date.now()-86400000).toISOString().slice(0,10);
-  const yesterdayVal = snapshot[yesterday];
-  let fluctHTML = '';
-  if(yesterdayVal && totalValue > 0) {
-    const diff = totalValue - yesterdayVal;
-    const pct = ((diff/yesterdayVal)*100).toFixed(1);
-    const sign = diff >= 0 ? '+' : '';
-    const color = diff >= 0 ? 'var(--green)' : 'var(--red)';
-    fluctHTML = `<div style="font-size:12px;color:${color};font-weight:600;margin-top:2px;">${sign}${diff.toFixed(2)} € (${sign}${pct}%) vs hier</div>`;
-  }
-  const totalEl = document.getElementById('collTotalValue');
-  if(totalEl) {
-    if(!isPremium) {
-      totalEl.innerHTML = `
-        <div style="position:relative;overflow:hidden;border-radius:10px;">
-          <div style="filter:blur(5px);pointer-events:none;user-select:none;">
-            <div style="font-size:24px;font-weight:700;color:var(--navy);font-family:Georgia,serif;">999.99 €</div>
-            <div style="font-size:12px;color:var(--green);font-weight:600;margin-top:2px;">+12.50 € (+1.3%) vs hier</div>
-          </div>
-          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span style="font-size:16px;">🔒</span>
-              <span style="font-size:12px;font-weight:700;color:var(--navy);">${currentLang==='fr'?'Valeur Premium':'Premium value'}</span>
-            </div>
-            <button onclick="switchPageById('pagePremium')" style="background:var(--gold);border:none;color:#1a1a2e;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">✦ Débloquer</button>
-          </div>
-        </div>`;
-    } else if(totalValue > 0) {
-      totalEl.innerHTML = `<div style="font-size:24px;font-weight:700;color:var(--navy);font-family:Georgia,serif;">${totalValue.toFixed(2)} €</div>${fluctHTML}`;
-    } else {
-      totalEl.innerHTML = `<div style="color:var(--text-dim);font-size:13px;">${currentLang==='fr'?'Ajoute des cartes pour voir la valeur':'Add cards to see your value'}</div>`;
+  // Afficher le vrai contenu Premium si connecté et Premium
+  const premiumBlock = document.getElementById('collPremiumBlock');
+  if(premiumBlock) {
+    if(isPremium) {
+      document.getElementById('collPremiumBlur').style.display = 'none';
+      const realEl = document.getElementById('collTotalValue');
+      realEl.style.display = '';
+      const totalValue = (op.value||0) + (pk.value||0);
+      const todayKey = new Date().toISOString().slice(0,10);
+      const snapshotKey = 'nakama_value_snapshot';
+      const snapshot = JSON.parse(localStorage.getItem(snapshotKey)||'{}');
+      if(totalValue > 0) {
+        snapshot[todayKey] = totalValue;
+        const keys = Object.keys(snapshot).sort();
+        if(keys.length > 7) delete snapshot[keys[0]];
+        localStorage.setItem(snapshotKey, JSON.stringify(snapshot));
+      }
+      const yesterday = new Date(Date.now()-86400000).toISOString().slice(0,10);
+      const yesterdayVal = snapshot[yesterday];
+      let fluctHTML = '';
+      if(yesterdayVal && totalValue > 0) {
+        const diff = totalValue - yesterdayVal;
+        const pct = ((diff/yesterdayVal)*100).toFixed(1);
+        const sign = diff >= 0 ? '+' : '';
+        const color = diff >= 0 ? '#16a34a' : '#c0392b';
+        fluctHTML = `<div style="font-size:12px;color:${color};font-weight:600;margin-top:2px;">${sign}${diff.toFixed(2)} € (${sign}${pct}%) vs hier</div>`;
+      }
+      realEl.innerHTML += totalValue > 0
+        ? `<div style="font-size:26px;font-weight:700;color:var(--navy);font-family:Georgia,serif;">${totalValue.toFixed(2)} €</div>${fluctHTML}`
+        : `<div style="color:var(--text-dim);font-size:13px;">Ajoute des cartes pour voir la valeur</div>`;
     }
   }
 
@@ -1290,35 +1362,11 @@ async function renderProfilPage(){
 async function renderTopMovers() {
   const el = document.getElementById('profilTopMovers');
   if (!el) return;
-
-  const fakeMoverContent = `
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:rgba(22,163,74,0.06);border-radius:8px;">
-        <div><div style="font-size:13px;font-weight:600;">████████████</div><div style="font-size:11px;color:var(--text-dim);">base1 · Rare</div></div>
-        <div style="color:var(--green);font-weight:700;font-size:13px;">+12.4%</div>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:rgba(22,163,74,0.06);border-radius:8px;">
-        <div><div style="font-size:13px;font-weight:600;">██████████</div><div style="font-size:11px;color:var(--text-dim);">swsh1 · Rare</div></div>
-        <div style="color:var(--green);font-weight:700;font-size:13px;">+8.1%</div>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:rgba(192,57,43,0.06);border-radius:8px;">
-        <div><div style="font-size:13px;font-weight:600;">███████████████</div><div style="font-size:11px;color:var(--text-dim);">sv1 · Ultra Rare</div></div>
-        <div style="color:var(--red);font-weight:700;font-size:13px;">-5.3%</div>
-      </div>
-    </div>`;
-
-  if (!isPremium) {
-    el.innerHTML = `
-      <div style="position:relative;overflow:hidden;border-radius:10px;">
-        <div style="filter:blur(4px);pointer-events:none;user-select:none;opacity:0.6;">${fakeMoverContent}</div>
-        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(245,245,247,0.5);backdrop-filter:blur(2px);">
-          <div style="font-size:22px;margin-bottom:6px;">🔒</div>
-          <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px;">${currentLang==='fr'?'Fonctionnalité Premium':'Premium feature'}</div>
-          <button onclick="switchPageById('pagePremium')" style="background:var(--gold);border:none;color:#1a1a2e;padding:7px 16px;border-radius:8px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">✦ Débloquer</button>
-        </div>
-      </div>`;
-    return;
-  }
+  if (!isPremium) return; // La version blurrée est déjà dans le HTML
+  el.style.display = '';
+  // Cacher le bloc blurré
+  el.closest('.pc').querySelector('div[style*="filter:blur"]').style.display = 'none';
+  el.closest('.pc').querySelector('div[style*="position:absolute"]').style.display = 'none';
 
   // Fetch price_history des 2 derniers jours pour les cartes de la collection
   const cardIds = Object.keys(collection);
@@ -1378,26 +1426,10 @@ async function renderTopMovers() {
 async function renderPriceChart() {
   const el = document.getElementById('profilPriceChart');
   if (!el) return;
-
-  const fakeChartContent = `
-    <svg viewBox="0 0 300 80" style="width:100%;height:80px;">
-      <polyline points="0,60 30,50 60,45 90,40 120,42 150,35 180,30 210,25 240,20 270,22 300,15" fill="none" stroke="#c9a84c" stroke-width="2"/>
-      <polyline points="0,60 30,50 60,45 90,40 120,42 150,35 180,30 210,25 240,20 270,22 300,15" fill="url(#grad)" stroke="none" opacity="0.2"/>
-    </svg>
-    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-top:4px;"><span>J-30</span><span>Aujourd'hui</span></div>`;
-
-  if (!isPremium) {
-    el.innerHTML = `
-      <div style="position:relative;overflow:hidden;border-radius:10px;">
-        <div style="filter:blur(3px);pointer-events:none;user-select:none;opacity:0.6;">${fakeChartContent}</div>
-        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(245,245,247,0.5);backdrop-filter:blur(2px);">
-          <div style="font-size:22px;margin-bottom:6px;">🔒</div>
-          <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px;">${currentLang==='fr'?'Fonctionnalité Premium':'Premium feature'}</div>
-          <button onclick="switchPageById('pagePremium')" style="background:var(--gold);border:none;color:#1a1a2e;padding:7px 16px;border-radius:8px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">✦ Débloquer</button>
-        </div>
-      </div>`;
-    return;
-  }
+  if (!isPremium) return; // La version blurrée est déjà dans le HTML
+  el.style.display = '';
+  el.closest('.pc').querySelector('div[style*="filter:blur"]').style.display = 'none';
+  el.closest('.pc').querySelector('div[style*="position:absolute"]').style.display = 'none';
 
   // Fetch snapshots collection depuis localStorage
   const snapshot = JSON.parse(localStorage.getItem('nakama_value_snapshot')||'{}');
