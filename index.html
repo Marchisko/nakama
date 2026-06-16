@@ -362,16 +362,6 @@ body::before{display:none;}
 
 <!-- CARTES -->
 <div class="page active" id="pageCards">
-  <div class="page-hero page-hero--img">
-    <div class="page-hero-img-wrap">
-      <img src="https://i.pinimg.com/originals/4e/6a/e4/4e6ae4b9b8c3f3e6c4e5d5e5e5e5e5e5.jpg" alt="One Piece crew" class="page-hero-img" id="heroImg" onerror="this.style.display='none'">
-      <div class="page-hero-img-overlay"></div>
-    </div>
-    <div class="page-hero-content">
-      <div class="page-hero-eyebrow" id="heroEyebrowEl">Grand Line Collection</div>
-      <div class="page-hero-sub" id="heroSub">Chargement...</div>
-    </div>
-  </div>
   <div class="filters-wrap">
     <div class="filters" id="rarityFilters">
       <button class="chip active" onclick="setRarity(null,this)">Tout</button>
@@ -923,7 +913,7 @@ function save(){
   localStorage.setItem('opitem_collection',JSON.stringify(collection));
   localStorage.setItem('opitem_wishlist',JSON.stringify(wishlist));
 }
-function cardData(c){return {id:c.id,name:c.name,set_id:c.set_id,rarity:c.rarity,image_url:c.image_url,colors:c.colors,game:c.game||currentGame};}
+function cardData(c){return {id:c.id,name:c.name,name_fr:c.name_fr,set_id:c.set_id,rarity:c.rarity,image_url:c.image_url,image_url_fr:c.image_url_fr,colors:c.colors,game:c.game||currentGame};}
 
 function imgUrl(url){
   if(!url)return '';
