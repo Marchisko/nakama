@@ -711,9 +711,9 @@ body::before{display:none;}
         <div style="font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;" id="purchasePriceLabel">Prix d'achat (optionnel)</div>
         <div style="display:flex;align-items:center;gap:8px;">
           <input type="number" id="purchasePriceInput" placeholder="0.00" step="0.01" min="0"
-            style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;"
-            oninput="savePurchasePrice(this.value)">
+            style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;">
           <span style="font-size:13px;color:var(--text-dim);">€</span>
+          <button onclick="confirmPurchasePrice()" style="background:var(--navy);border:none;color:#fff;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;" id="purchasePriceBtn">OK</button>
         </div>
         <div id="plDisplay" style="margin-top:8px;font-size:13px;font-weight:600;display:none;"></div>
       </div>
@@ -1152,28 +1152,30 @@ async function renderCollectionList(){
   }).join('');
 
   // Charger P&L pour les cartes avec prix d'achat
-  const withPurchase = items.filter(i => i.purchasePrice);
+  const withPurchase = items.filter(i => i.purchasePrice != null && i.purchasePrice > 0);
   if(withPurchase.length) {
     const ids = withPurchase.map(i => i.card.id);
     try {
-      const r = await fetch(`${SB_URL}/rest/v1/prices?card_id=in.(${ids.join(',')})&select=card_id,price_market_usd,price_eur`, {
+      const r = await fetch(`${SB_URL}/rest/v1/prices?card_id=in.(${ids.map(id=>encodeURIComponent(id)).join(',')})&select=card_id,price_market_usd,price_en_usd,price_eur`, {
         headers: {"apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`}
       });
       const prices = await r.json();
       prices.forEach(p => {
         const item = collection[p.card_id];
         if(!item || !item.purchasePrice) return;
-        const current = p.price_eur || (p.price_market_usd * EUR_RATE);
+        const usd = p.price_market_usd || p.price_en_usd;
+        const current = p.price_eur || (usd ? usd * EUR_RATE : null);
         if(!current) return;
         const diff = (current - item.purchasePrice) * item.qty;
-        const pct = ((diff / (item.purchasePrice * item.qty)) * 100).toFixed(1);
+        const totalPurchase = item.purchasePrice * item.qty;
+        const pct = ((diff / totalPurchase) * 100).toFixed(1);
         const sign = diff >= 0 ? '+' : '';
         const color = diff >= 0 ? '#16a34a' : '#c0392b';
         const arrow = diff >= 0 ? '▲' : '▼';
         const el = document.getElementById(`pl-${p.card_id}`);
         if(el) el.innerHTML = `<span style="color:${color};font-weight:600;">${arrow} ${sign}${diff.toFixed(2)} € (${sign}${pct}%)</span>`;
       });
-    } catch(e) {}
+    } catch(e) { console.warn('P&L error:', e); }
   }
 }
 
@@ -1877,6 +1879,19 @@ async function loadFromSupabase() {
     wishlist = {};
     wishRes.data.forEach(row => { wishlist[row.card_id] = { card: row.card_data, addedAt: new Date(row.added_at).getTime() }; });
   }
+}
+
+function confirmPurchasePrice() {
+  const val = document.getElementById('purchasePriceInput').value;
+  const btn = document.getElementById('purchasePriceBtn');
+  savePurchasePrice(val);
+  // Feedback visuel
+  if(btn) {
+    btn.textContent = '✓';
+    btn.style.background = '#16a34a';
+    setTimeout(() => { btn.textContent = 'OK'; btn.style.background = 'var(--navy)'; }, 1500);
+  }
+  renderCollectionList();
 }
 
 function savePurchasePrice(val) {
