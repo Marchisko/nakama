@@ -362,16 +362,6 @@ body::before{display:none;}
 
 <!-- CARTES -->
 <div class="page active" id="pageCards">
-  <div class="page-hero page-hero--img">
-    <div class="page-hero-img-wrap">
-      <img src="https://i.pinimg.com/originals/4e/6a/e4/4e6ae4b9b8c3f3e6c4e5d5e5e5e5e5e5.jpg" alt="One Piece crew" class="page-hero-img" id="heroImg" onerror="this.style.display='none'">
-      <div class="page-hero-img-overlay"></div>
-    </div>
-    <div class="page-hero-content">
-      <div class="page-hero-eyebrow" id="heroEyebrowEl">Grand Line Collection</div>
-      <div class="page-hero-sub" id="heroSub">Chargement...</div>
-    </div>
-  </div>
   <div class="filters-wrap">
     <div class="filters" id="rarityFilters">
       <button class="chip active" onclick="setRarity(null,this)">Tout</button>
@@ -643,48 +633,47 @@ body::before{display:none;}
   <div style="background:#1a1a2e;min-height:100vh;padding-bottom:100px;">
     <div style="background:#1a1a2e;padding:28px 20px 16px;border-bottom:1px solid rgba(232,197,109,0.1);">
       <div style="font-size:9px;color:var(--gold-light);letter-spacing:.2em;text-transform:uppercase;margin-bottom:8px;">✦ Nakama Premium</div>
-      <div style="font-family:Georgia,serif;font-size:26px;font-weight:700;color:#fff;line-height:1.2;margin-bottom:6px;">Débloquez tout<br>le potentiel</div>
-      <div style="font-size:12px;color:rgba(255,255,255,.45);line-height:1.5;">Valorisation en temps réel, graphiques d'évolution, scan par caméra</div>
+      <div id="premPageTitle" style="font-family:Georgia,serif;font-size:26px;font-weight:700;color:#fff;line-height:1.2;margin-bottom:6px;">Débloquez tout<br>le potentiel</div>
+      <div id="premPageSub" style="font-size:12px;color:rgba(255,255,255,.45);line-height:1.5;">Valorisation en temps réel, graphiques d'évolution, scan par caméra</div>
     </div>
     <div style="padding:20px 16px;">
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
-        <div style="font-size:13px;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:10px;"><span style="font-size:16px;">📈</span> Valeur de collection en temps réel</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:10px;"><span style="font-size:16px;">📊</span> Graphiques d'évolution sur 30 jours</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:10px;"><span style="font-size:16px;">📷</span> Scan de cartes par caméra</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:10px;"><span style="font-size:16px;">☁️</span> Synchronisation multi-appareils</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:10px;"><span style="font-size:16px;">🔔</span> Alertes de prix</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:10px;"><span style="font-size:16px;">📈</span> <span id="premFeat1">Valeur de collection en temps réel</span></div>
+        <div style="font-size:13px;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:10px;"><span style="font-size:16px;">📊</span> <span id="premFeat2">Graphiques d'évolution sur 30 jours</span></div>
+        <div style="font-size:13px;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:10px;"><span style="font-size:16px;">📷</span> <span id="premFeat3">Scan de cartes par caméra</span></div>
+        <div style="font-size:13px;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:10px;"><span style="font-size:16px;">☁️</span> <span id="premFeat4">Synchronisation multi-appareils</span></div>
+        <div style="font-size:13px;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:10px;"><span style="font-size:16px;">🔔</span> <span id="premFeat5">Alertes de prix</span></div>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
         <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;">
-          <div style="font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:rgba(255,255,255,.1);color:rgba(255,255,255,.6);padding:3px 8px;border-radius:20px;">2 jours offerts</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.6);font-weight:500;">Hebdomadaire</div>
-          <div style="font-family:Georgia,serif;font-size:22px;font-weight:700;color:#fff;">1,50 €<span style="font-size:11px;font-weight:400;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif;">/sem.</span></div>
-          <div style="font-size:10px;color:rgba(255,255,255,.35);">Essai gratuit 2 jours</div>
-          <button onclick="handlePremium('weekly')" style="width:100%;padding:10px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:10px;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;margin-top:4px;">Commencer</button>
+          <div id="premWeeklyBadge" style="font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:rgba(255,255,255,.1);color:rgba(255,255,255,.6);padding:3px 8px;border-radius:20px;">2 jours offerts</div>
+          <div id="premWeeklyLabel" style="font-size:12px;color:rgba(255,255,255,.6);font-weight:500;">Hebdomadaire</div>
+          <div style="font-family:Georgia,serif;font-size:22px;font-weight:700;color:#fff;">1,50 €<span style="font-size:11px;font-weight:400;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif;"> /sem.</span></div>
+          <div id="premWeeklyTrial" style="font-size:10px;color:rgba(255,255,255,.35);">Essai gratuit 2 jours</div>
+          <button onclick="handlePremium('weekly')" id="premWeeklyBtn" style="width:100%;padding:10px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:10px;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;margin-top:4px;">Commencer</button>
         </div>
         <div style="background:rgba(232,197,109,.08);border:1px solid rgba(232,197,109,.35);border-radius:14px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;">
-          <div style="font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:rgba(232,197,109,.2);color:var(--gold-light);padding:3px 8px;border-radius:20px;">4 jours offerts</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.6);font-weight:500;">Mensuel</div>
-          <div style="font-family:Georgia,serif;font-size:22px;font-weight:700;color:#fff;">2,99 €<span style="font-size:11px;font-weight:400;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif;">/mois</span></div>
-          <div style="font-size:10px;color:rgba(255,255,255,.35);">Essai gratuit 4 jours</div>
-          <button onclick="handlePremium('monthly')" style="width:100%;padding:10px;background:var(--gold);border:none;color:#1a1a2e;border-radius:10px;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:700;cursor:pointer;margin-top:4px;">Commencer</button>
+          <div id="premMonthlyBadge" style="font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:rgba(232,197,109,.2);color:var(--gold-light);padding:3px 8px;border-radius:20px;">4 jours offerts</div>
+          <div id="premMonthlyLabel" style="font-size:12px;color:rgba(255,255,255,.6);font-weight:500;">Mensuel</div>
+          <div style="font-family:Georgia,serif;font-size:22px;font-weight:700;color:#fff;">2,99 €<span style="font-size:11px;font-weight:400;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif;"> /mois</span></div>
+          <div id="premMonthlyTrial" style="font-size:10px;color:rgba(255,255,255,.35);">Essai gratuit 4 jours</div>
+          <button onclick="handlePremium('monthly')" id="premMonthlyBtn" style="width:100%;padding:10px;background:var(--gold);border:none;color:#1a1a2e;border-radius:10px;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:700;cursor:pointer;margin-top:4px;">Commencer</button>
         </div>
       </div>
 
       <div style="background:rgba(232,197,109,.08);border:1px solid rgba(232,197,109,.35);border-radius:14px;padding:18px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
         <div>
-          <div style="font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:rgba(232,197,109,.2);color:var(--gold-light);padding:3px 8px;border-radius:20px;display:inline-block;margin-bottom:6px;">Meilleur prix · 30% off</div>
-          <div style="font-size:13px;color:rgba(255,255,255,.7);font-weight:500;">Annuel</div>
+          <div id="premAnnualBadge" style="font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:rgba(232,197,109,.2);color:var(--gold-light);padding:3px 8px;border-radius:20px;display:inline-block;margin-bottom:6px;">Meilleur prix · 30% off</div>
+          <div id="premAnnualLabel" style="font-size:13px;color:rgba(255,255,255,.7);font-weight:500;">Annuel</div>
         </div>
         <div style="text-align:right;">
-          <div style="font-family:Georgia,serif;font-size:24px;font-weight:700;color:#fff;">24,99 €<span style="font-size:11px;font-weight:400;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif;">/an</span></div>
-          <div style="font-size:10px;color:rgba(255,255,255,.35);">soit 2,08 € / mois</div>
+          <div style="font-family:Georgia,serif;font-size:24px;font-weight:700;color:#fff;">24,99 €<span style="font-size:11px;font-weight:400;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif;"> /an</span></div>
+          <div id="premAnnualSub" style="font-size:10px;color:rgba(255,255,255,.35);">soit 2,08 € / mois</div>
         </div>
       </div>
-      <button onclick="handlePremium('annual')" style="width:100%;padding:14px;background:var(--gold);border:none;color:#1a1a2e;border-radius:12px;font-size:14px;font-family:'DM Sans',sans-serif;font-weight:700;cursor:pointer;margin-bottom:16px;">Commencer — Annuel</button>
-
-      <div style="font-size:10px;color:rgba(255,255,255,.25);text-align:center;">Résiliable à tout moment. Sans engagement.</div>
+      <button onclick="handlePremium('annual')" id="premAnnualBtn" style="width:100%;padding:14px;background:var(--gold);border:none;color:#1a1a2e;border-radius:12px;font-size:14px;font-family:'DM Sans',sans-serif;font-weight:700;cursor:pointer;margin-bottom:16px;">Commencer — Annuel</button>
+      <div id="premDisclaimer" style="font-size:10px;color:rgba(255,255,255,.25);text-align:center;">Résiliable à tout moment. Sans engagement.</div>
     </div>
   </div>
 </div>
@@ -1634,6 +1623,13 @@ function applyLang(){
   // Hero sub loading text
   const heroSub = document.getElementById('heroSub');
   if(heroSub && (heroSub.textContent === 'Chargement...' || heroSub.textContent === 'Loading...')) heroSub.textContent = t('loading');
+  // Premium page + blur block translations
+  const premTr = {
+    fr: { title:'Débloquez tout<br>le potentiel', sub:'Valorisation en temps réel, graphiques d\'évolution, scan par caméra', feat1:'Valeur de collection en temps réel', feat2:'Graphiques d\'évolution sur 30 jours', feat3:'Scan de cartes par caméra', feat4:'Synchronisation multi-appareils', feat5:'Alertes de prix', weeklyBadge:'2 jours offerts', weeklyLabel:'Hebdomadaire', weeklyTrial:'Essai gratuit 2 jours', weeklyBtn:'Commencer', monthlyBadge:'4 jours offerts', monthlyLabel:'Mensuel', monthlyTrial:'Essai gratuit 4 jours', monthlyBtn:'Commencer', annualBadge:'Meilleur prix · 30% off', annualLabel:'Annuel', annualSub:'soit 2,08 € / mois', annualBtn:'Commencer — Annuel', disclaimer:'Résiliable à tout moment. Sans engagement.', blurDesc:'Valeur totale, fluctuations 24h et top variations de ta collection', blurBtn:'Débloquer Premium', forgotPwd:'Mot de passe oublié ?' },
+    en: { title:'Unlock your full<br>potential', sub:'Real-time valuation, price charts, camera scan', feat1:'Real-time collection value', feat2:'30-day price evolution charts', feat3:'Camera card scan', feat4:'Multi-device sync', feat5:'Price alerts', weeklyBadge:'2 days free', weeklyLabel:'Weekly', weeklyTrial:'2-day free trial', weeklyBtn:'Get started', monthlyBadge:'4 days free', monthlyLabel:'Monthly', monthlyTrial:'4-day free trial', monthlyBtn:'Get started', annualBadge:'Best value · 30% off', annualLabel:'Annual', annualSub:'only €2.08 / month', annualBtn:'Get started — Annual', disclaimer:'Cancel anytime. No commitment.', blurDesc:'Total value, 24h fluctuations and top movers in your collection', blurBtn:'Unlock Premium', forgotPwd:'Forgot password?' }
+  };
+  const pt = premTr[l]||premTr.fr;
+  [['premPageTitle',pt.title,true],['premPageSub',pt.sub],['premFeat1',pt.feat1],['premFeat2',pt.feat2],['premFeat3',pt.feat3],['premFeat4',pt.feat4],['premFeat5',pt.feat5],['premWeeklyBadge',pt.weeklyBadge],['premWeeklyLabel',pt.weeklyLabel],['premWeeklyTrial',pt.weeklyTrial],['premWeeklyBtn',pt.weeklyBtn],['premMonthlyBadge',pt.monthlyBadge],['premMonthlyLabel',pt.monthlyLabel],['premMonthlyTrial',pt.monthlyTrial],['premMonthlyBtn',pt.monthlyBtn],['premAnnualBadge',pt.annualBadge],['premAnnualLabel',pt.annualLabel],['premAnnualSub',pt.annualSub],['premAnnualBtn',pt.annualBtn],['premDisclaimer',pt.disclaimer],['premiumBlurDesc',pt.blurDesc],['premiumBlurBtn',pt.blurBtn],['forgotBtn',pt.forgotPwd]].forEach(([id,val,html])=>{ const el=document.getElementById(id); if(el){ if(html) el.innerHTML=val; else el.textContent=val; }});
   }catch(e){console.warn('applyLang error:',e);}
 }
 
