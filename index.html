@@ -706,6 +706,17 @@ body::before{display:none;}
         <button class="add-btn" id="addBtn" onclick="toggleCollection()">+ Collection</button>
         <button class="wish-btn" id="wishBtn" onclick="toggleWishlist()">❤️ Wishlist</button>
       </div>
+      <!-- Champ prix d'achat + P&L -->
+      <div id="purchasePriceWrap" style="display:none;margin-top:10px;padding:12px;background:var(--bg3);border-radius:12px;">
+        <div style="font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;" id="purchasePriceLabel">Prix d'achat (optionnel)</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" id="purchasePriceInput" placeholder="0.00" step="0.01" min="0"
+            style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;"
+            oninput="savePurchasePrice(this.value)">
+          <span style="font-size:13px;color:var(--text-dim);">€</span>
+        </div>
+        <div id="plDisplay" style="margin-top:8px;font-size:13px;font-weight:600;display:none;"></div>
+      </div>
       <div class="market-links">
         <a class="cm-link" id="cmLink" href="#" target="_blank">🔗 Cardmarket</a>
         <a class="ebay-link" id="ebayLink" href="#" target="_blank">🛒 Ventes eBay</a>
@@ -997,7 +1008,19 @@ function onSearch(){
 
 function openModal(c){
   currentCard=c;
-  document.getElementById('mImg').src=imgUrl((currentLang==='fr'&&c.image_url_fr)||c.image_url)||'';
+  // Purchase price & P&L
+  const inColl = !!collection[c.id];
+  const wrap = document.getElementById('purchasePriceWrap');
+  const plDisplay = document.getElementById('plDisplay');
+  const priceInput = document.getElementById('purchasePriceInput');
+  if(wrap) {
+    wrap.style.display = inColl ? '' : 'none';
+    if(inColl) {
+      const purchasePrice = collection[c.id].purchasePrice || '';
+      priceInput.value = purchasePrice || '';
+      updatePLDisplay(c.id);
+    }
+  }
   document.getElementById('mName').textContent=(currentLang==='fr'&&c.name_fr)||c.name||'—';
   const badges=[
     `<span class="badge badge-rarity">${c.rarity||''}</span>`,
@@ -1017,8 +1040,12 @@ function openModal(c){
   document.getElementById('btnPriceJP').classList.remove('active');
   // Cacher le toggle EN/JP pour Pokémon
   document.querySelector('.price-toggle').style.display = currentGame === 'pokemon' ? 'none' : 'flex';
+  document.getElementById('mImg').src=imgUrl((currentLang==='fr'&&c.image_url_fr)||c.image_url)||'';
   loadCardPrice(c.id);
   updateModalBtns();
+  // Show/hide purchase price wrap based on collection status
+  const wrap2 = document.getElementById('purchasePriceWrap');
+  if(wrap2) wrap2.style.display = collection[c.id] ? '' : 'none';
   document.getElementById('modal').classList.add('open');
   document.body.style.overflow='hidden';
 }
@@ -1037,12 +1064,19 @@ function toggleCollection(){
   if(!currentCard)return;
   if(collection[currentCard.id]){
     collection[currentCard.id].qty++;
-    showToast(`+1 · ${currentCard.name} (×${collection[currentCard.id].qty})`);
-    saveCollectionItem(currentCard.id, collection[currentCard.id].qty, cardData(currentCard));
+    showToast(`+1 · ${(currentLang==='fr'&&currentCard.name_fr)||currentCard.name} (×${collection[currentCard.id].qty})`);
+    saveCollectionItem(currentCard.id, collection[currentCard.id].qty, cardData(currentCard), collection[currentCard.id].purchasePrice);
   } else {
-    collection[currentCard.id]={qty:1,card:cardData(currentCard)};
-    showToast(`✓ ${currentCard.name} ajouté !`);
-    saveCollectionItem(currentCard.id, 1, cardData(currentCard));
+    collection[currentCard.id]={qty:1,card:cardData(currentCard),purchasePrice:null};
+    showToast(`✓ ${(currentLang==='fr'&&currentCard.name_fr)||currentCard.name} ajouté !`);
+    saveCollectionItem(currentCard.id, 1, cardData(currentCard), null);
+  }
+  // Afficher le champ prix d'achat
+  const wrap = document.getElementById('purchasePriceWrap');
+  if(wrap) {
+    wrap.style.display = '';
+    document.getElementById('purchasePriceInput').value = collection[currentCard.id].purchasePrice || '';
+    updatePLDisplay(currentCard.id);
   }
   save();updateModalBtns();renderCollectionPage();
 }
@@ -1085,7 +1119,7 @@ function setCollTab(game){
   renderCollectionList();
 }
 
-function renderCollectionList(){
+async function renderCollectionList(){
   const items = Object.values(collection).filter(i => (i.card.game||'onepiece') === collTab);
   const list = document.getElementById('collectionList');
   if(!list) return;
@@ -1093,19 +1127,54 @@ function renderCollectionList(){
     list.innerHTML=`<div class="empty-state"><div class="empty-icon">${collTab==='pokemon'?'🎴':'⚔️'}</div><div class="empty-title">${currentLang==='fr'?'Aucune carte':'No cards'}</div><div class="empty-sub">${currentLang==='fr'?`Parcours les cartes ${collTab==='pokemon'?'Pokémon':'One Piece'} et appuie sur "+ Collection"`:`Browse ${collTab==='pokemon'?'Pokémon':'One Piece'} cards and tap "+ Collection"`}</div></div>`;
     return;
   }
-  list.innerHTML=items.map(item=>`
+  list.innerHTML=items.map(item=>{
+    const nameFR = currentLang==='fr' && item.card.name_fr ? item.card.name_fr : item.card.name;
+    const imgSrc = currentLang==='fr' && item.card.image_url_fr ? item.card.image_url_fr : item.card.image_url;
+    const hasPL = item.purchasePrice && item.currentPrice;
+    let plHtml = '';
+    if(item.purchasePrice) {
+      plHtml = `<div class="list-pl" id="pl-${item.card.id}" style="font-size:10px;color:var(--text-dim);">P&L...</div>`;
+    }
+    return `
     <div class="list-item" onclick="openModal(${JSON.stringify(item.card).replace(/"/g,'&quot;')})">
-      <img class="list-thumb" src="${imgUrl(item.card.image_url)||''}" onerror="this.style.opacity=0">
+      <img class="list-thumb" src="${imgUrl(imgSrc)||''}" onerror="this.style.opacity=0">
       <div class="list-info">
-        <div class="list-name">${item.card.name||'—'}</div>
+        <div class="list-name">${nameFR||'—'}</div>
         <div class="list-meta">${collTab==='pokemon'?(PK_SET_NAMES[item.card.set_id]||item.card.set_id):item.card.set_id||''} · ${RARITY_LABELS[item.card.rarity]||item.card.rarity||''}</div>
+        ${plHtml}
       </div>
       <div class="list-right">
         <div class="list-qty">${item.qty}</div>
         <div class="list-qty-lbl">${currentLang==='fr'?`copie${item.qty>1?'s':''}`:`cop${item.qty>1?'ies':'y'}`}</div>
         <button class="list-remove" onclick="removeCollection(event,'${item.card.id}')">🗑</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
+
+  // Charger P&L pour les cartes avec prix d'achat
+  const withPurchase = items.filter(i => i.purchasePrice);
+  if(withPurchase.length) {
+    const ids = withPurchase.map(i => i.card.id);
+    try {
+      const r = await fetch(`${SB_URL}/rest/v1/prices?card_id=in.(${ids.join(',')})&select=card_id,price_market_usd,price_eur`, {
+        headers: {"apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`}
+      });
+      const prices = await r.json();
+      prices.forEach(p => {
+        const item = collection[p.card_id];
+        if(!item || !item.purchasePrice) return;
+        const current = p.price_eur || (p.price_market_usd * EUR_RATE);
+        if(!current) return;
+        const diff = (current - item.purchasePrice) * item.qty;
+        const pct = ((diff / (item.purchasePrice * item.qty)) * 100).toFixed(1);
+        const sign = diff >= 0 ? '+' : '';
+        const color = diff >= 0 ? '#16a34a' : '#c0392b';
+        const arrow = diff >= 0 ? '▲' : '▼';
+        const el = document.getElementById(`pl-${p.card_id}`);
+        if(el) el.innerHTML = `<span style="color:${color};font-weight:600;">${arrow} ${sign}${diff.toFixed(2)} € (${sign}${pct}%)</span>`;
+      });
+    } catch(e) {}
+  }
 }
 
 async function calcGameValue(game){
@@ -1802,7 +1871,7 @@ async function loadFromSupabase() {
   ]);
   if (collRes.data) {
     collection = {};
-    collRes.data.forEach(row => { collection[row.card_id] = { qty: row.qty, card: row.card_data }; });
+    collRes.data.forEach(row => { collection[row.card_id] = { qty: row.qty, card: row.card_data, purchasePrice: row.purchase_price || null }; });
   }
   if (wishRes.data) {
     wishlist = {};
@@ -1810,14 +1879,60 @@ async function loadFromSupabase() {
   }
 }
 
-async function saveCollectionItem(cardId, qty, cardDataObj) {
+function savePurchasePrice(val) {
+  if(!currentCard || !collection[currentCard.id]) return;
+  const price = parseFloat(val) || null;
+  collection[currentCard.id].purchasePrice = price;
+  save();
+  saveCollectionItem(currentCard.id, collection[currentCard.id].qty, cardData(currentCard), price);
+  updatePLDisplay(currentCard.id);
+}
+
+async function updatePLDisplay(cardId) {
+  const el = document.getElementById('plDisplay');
+  if(!el || !collection[cardId]) return;
+  const purchasePrice = collection[cardId].purchasePrice;
+  if(!purchasePrice) { el.style.display='none'; return; }
+
+  // Fetch prix actuel
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/prices?card_id=eq.${cardId}&select=price_market_usd,price_eur`, {
+      headers: {"apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`}
+    });
+    const data = await r.json();
+    if(!data[0]) { el.style.display='none'; return; }
+    const currentPrice = data[0].price_eur || (data[0].price_market_usd * EUR_RATE);
+    if(!currentPrice) { el.style.display='none'; return; }
+
+    const qty = collection[cardId].qty || 1;
+    const totalPurchase = purchasePrice * qty;
+    const totalCurrent = currentPrice * qty;
+    const diff = totalCurrent - totalPurchase;
+    const pct = ((diff / totalPurchase) * 100).toFixed(1);
+    const sign = diff >= 0 ? '+' : '';
+    const color = diff >= 0 ? '#16a34a' : '#c0392b';
+    const arrow = diff >= 0 ? '▲' : '▼';
+
+    el.style.display = '';
+    el.innerHTML = `<span style="color:${color};">${arrow} ${sign}${diff.toFixed(2)} € (${sign}${pct}%)</span> <span style="color:var(--text-dim);font-size:11px;font-weight:400;">· actuel ${currentPrice.toFixed(2)} €</span>`;
+  } catch(e) { el.style.display='none'; }
+}
+
+async function saveCollectionItem(cardId, qty, cardDataObj, purchasePrice) {
   if (!currentUser) { save(); return; }
   if (qty <= 0) {
     await sbClient.from('user_collections').delete().eq('user_id', currentUser.id).eq('card_id', cardId);
   } else {
-    await sbClient.from('user_collections').upsert({ user_id: currentUser.id, card_id: cardId, qty, card_data: cardDataObj }, { onConflict: 'user_id,card_id' });
+    await sbClient.from('user_collections').upsert({
+      user_id: currentUser.id,
+      card_id: cardId,
+      qty,
+      card_data: cardDataObj,
+      purchase_price: purchasePrice || null,
+      purchase_date: purchasePrice ? new Date().toISOString().slice(0,10) : null
+    }, { onConflict: 'user_id,card_id' });
   }
-  save(); // keep localStorage as fallback
+  save();
 }
 
 async function saveWishlistItem(cardId, cardDataObj, adding) {
