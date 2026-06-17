@@ -329,9 +329,17 @@ body::before{display:none;}
 </head>
 <body>
 
+<!-- Splash screen -->
+<div id="splashScreen" style="position:fixed;inset:0;background:#1a1a2e;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.5s ease;">
+  <img src="https://raw.githubusercontent.com/Marchisko/nakama/main/Logo_nakama.jpg" style="width:120px;height:120px;border-radius:24px;object-fit:cover;margin-bottom:20px;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+  <div style="font-family:Georgia,serif;font-size:28px;font-weight:700;color:#fff;letter-spacing:3px;">NAKAMA</div>
+  <div style="font-size:11px;color:rgba(232,197,109,0.75);letter-spacing:1px;margin-top:4px;">Ton compagnon TCG</div>
+</div>
+
 <div class="header">
   <div class="header-inner">
-    <div class="logo">
+    <div class="logo" style="display:flex;align-items:center;gap:8px;">
+      <img src="https://raw.githubusercontent.com/Marchisko/nakama/main/Logo_nakama.jpg" style="width:28px;height:28px;border-radius:7px;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'">
       <svg viewBox="0 0 120 36" height="36" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
         <text x="4" y="20" font-family="Georgia,serif" font-size="16" font-weight="700" fill="#ffffff" letter-spacing="2">NAKAMA</text>
         <text x="4" y="32" font-family="Georgia,serif" font-size="7" fill="rgba(232,197,109,0.75)" letter-spacing="0.5" id="taglineText">Ton compagnon TCG</text>
@@ -955,7 +963,8 @@ async function fetchCards(append=false){
   renderCards(cards,append);
   const shown=append ? document.querySelectorAll('#grid .card').length : cards.length;
   document.getElementById('statsBar').innerHTML=`<span>${shown}</span> / <span>${total}</span> ${currentLang==='fr'?'cartes':'cards'}`;
-  document.getElementById('heroSub').textContent=t('cardsShown', total, shown);
+  const heroSubEl = document.getElementById('heroSub');
+  if(heroSubEl) heroSubEl.textContent=t('cardsShown', total, shown);
   document.getElementById('loadMoreWrap').style.display=(shown<total&&cards.length===LIMIT)?'block':'none';
 }
 
@@ -1156,24 +1165,26 @@ async function renderCollectionList(){
   if(withPurchase.length) {
     const ids = withPurchase.map(i => i.card.id);
     try {
-      const r = await fetch(`${SB_URL}/rest/v1/prices?card_id=in.(${ids.map(id=>encodeURIComponent(id)).join(',')})&select=card_id,price_market_usd,price_en_usd,price_eur`, {
+      const r = await fetch(`${SB_URL}/rest/v1/prices?card_id=in.(${ids.map(id=>encodeURIComponent(id)).join(',')})&select=card_id,price_market_usd,price_en_usd,price_usd,price_eur`, {
         headers: {"apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`}
       });
       const prices = await r.json();
       prices.forEach(p => {
         const item = collection[p.card_id];
-        if(!item || !item.purchasePrice) return;
-        const usd = p.price_market_usd || p.price_en_usd;
-        const current = p.price_eur || (usd ? usd * EUR_RATE : null);
+        if(!item || !item.purchasePrice || item.purchasePrice <= 0) return;
+        // Même logique que calcGameValue
+        const usd = p.price_market_usd || p.price_en_usd || p.price_usd;
+        const current = p.price_eur || (usd ? parseFloat((usd * EUR_RATE).toFixed(2)) : null);
         if(!current) return;
-        const diff = (current - item.purchasePrice) * item.qty;
-        const totalPurchase = item.purchasePrice * item.qty;
+        const qty = item.qty || 1;
+        const diff = (current - parseFloat(item.purchasePrice)) * qty;
+        const totalPurchase = parseFloat(item.purchasePrice) * qty;
         const pct = ((diff / totalPurchase) * 100).toFixed(1);
         const sign = diff >= 0 ? '+' : '';
         const color = diff >= 0 ? '#16a34a' : '#c0392b';
         const arrow = diff >= 0 ? '▲' : '▼';
         const el = document.getElementById(`pl-${p.card_id}`);
-        if(el) el.innerHTML = `<span style="color:${color};font-weight:600;">${arrow} ${sign}${diff.toFixed(2)} € (${sign}${pct}%)</span>`;
+        if(el) el.innerHTML = `<span style="color:${color};font-weight:600;">${arrow} ${sign}${diff.toFixed(2)} € (${sign}${pct}%)</span> <span style="color:var(--text-dim);">· ${current.toFixed(2)} €</span>`;
       });
     } catch(e) { console.warn('P&L error:', e); }
   }
@@ -1738,6 +1749,17 @@ fetchCards();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// Splash screen
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const splash = document.getElementById('splashScreen');
+    if(splash) {
+      splash.style.opacity = '0';
+      setTimeout(() => splash.remove(), 500);
+    }
+  }, 2000);
+});
+
 // ===== SUPABASE AUTH CLIENT =====
 const sbClient = supabase.createClient(SB_URL, SB_KEY);
 let currentUser = null;
