@@ -1334,20 +1334,9 @@ async function renderProfilPage(){
   const topCardsEl = document.getElementById('profilTopCards');
   const setProgressEl = document.getElementById('profilSetProgress');
 
-  const premiumLock = (el, fakeContent) => {
-    el.innerHTML = `
-      <div style="position:relative;overflow:hidden;border-radius:10px;">
-        <div style="filter:blur(4px);pointer-events:none;user-select:none;opacity:0.6;">${fakeContent}</div>
-        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(245,245,247,0.5);backdrop-filter:blur(2px);">
-          <div style="font-size:22px;margin-bottom:6px;">🔒</div>
-          <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px;">${currentLang==='fr'?'Fonctionnalité Premium':'Premium feature'}</div>
-          <button onclick="switchPageById('pagePremium')" style="background:var(--gold);border:none;color:#1a1a2e;padding:7px 16px;border-radius:8px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">✦ Débloquer</button>
-        </div>
-      </div>`;
-  };
+  const premiumLock = premiumLockBlock;
 
-  const rarityFake = `
-    <div class="rarity-bar-row"><div class="rarity-bar-label">Secret Rare</div><div class="rarity-bar-track"><div class="rarity-bar-fill" style="width:30%;background:#c0392b;"></div></div><div class="rarity-bar-count">3</div></div>
+  const rarityFake = `<div class="rarity-bar-row"><div class="rarity-bar-label">Secret Rare</div><div class="rarity-bar-track"><div class="rarity-bar-fill" style="width:30%;background:#c0392b;"></div></div><div class="rarity-bar-count">3</div></div>
     <div class="rarity-bar-row"><div class="rarity-bar-label">Super Rare</div><div class="rarity-bar-track"><div class="rarity-bar-fill" style="width:55%;background:#b45309;"></div></div><div class="rarity-bar-count">8</div></div>
     <div class="rarity-bar-row"><div class="rarity-bar-label">Rare</div><div class="rarity-bar-track"><div class="rarity-bar-fill" style="width:100%;background:#6b7280;"></div></div><div class="rarity-bar-count">21</div></div>`;
 
@@ -1416,6 +1405,16 @@ async function renderProfilPage(){
   }
 }
 
+function premiumLockBlock(el, fakeContent) {
+  el.innerHTML = `
+    <div style="position:relative;border-radius:10px;overflow:hidden;">
+      <div style="filter:blur(4px);pointer-events:none;user-select:none;max-height:120px;overflow:hidden;">${fakeContent}</div>
+      <div style="background:linear-gradient(to top,var(--bg2) 55%,transparent);padding:24px 16px 16px;text-align:center;">
+        <button onclick="switchPageById('pagePremium')" style="background:var(--gold);border:none;color:#1a1a2e;padding:9px 20px;border-radius:10px;font-size:12px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">✦ ${currentLang==='fr'?'Débloquer Premium':'Unlock Premium'}</button>
+      </div>
+    </div>`;
+}
+
 async function renderProfilPremiumSections() {
   const items = Object.values(collection);
   const rarityCounts={};
@@ -1426,17 +1425,7 @@ async function renderProfilPremiumSections() {
   const topCardsEl = document.getElementById('profilTopCards');
   const setProgressEl = document.getElementById('profilSetProgress');
 
-  const premiumLock = (el, fakeContent) => {
-    el.innerHTML = `
-      <div style="position:relative;overflow:hidden;border-radius:10px;">
-        <div style="filter:blur(4px);pointer-events:none;user-select:none;opacity:0.6;">${fakeContent}</div>
-        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(245,245,247,0.5);backdrop-filter:blur(2px);">
-          <div style="font-size:22px;margin-bottom:6px;">🔒</div>
-          <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px;">${currentLang==='fr'?'Fonctionnalité Premium':'Premium feature'}</div>
-          <button onclick="switchPageById('pagePremium')" style="background:var(--gold);border:none;color:#1a1a2e;padding:7px 16px;border-radius:8px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">✦ Débloquer</button>
-        </div>
-      </div>`;
-  };
+  const premiumLock = premiumLockBlock;
 
   const rarityFake = `<div class="rarity-bar-row"><div class="rarity-bar-label">Secret Rare</div><div class="rarity-bar-track"><div class="rarity-bar-fill" style="width:30%;background:#c0392b;"></div></div><div class="rarity-bar-count">3</div></div><div class="rarity-bar-row"><div class="rarity-bar-label">Super Rare</div><div class="rarity-bar-track"><div class="rarity-bar-fill" style="width:55%;background:#b45309;"></div></div><div class="rarity-bar-count">8</div></div><div class="rarity-bar-row"><div class="rarity-bar-label">Rare</div><div class="rarity-bar-track"><div class="rarity-bar-fill" style="width:100%;background:#6b7280;"></div></div><div class="rarity-bar-count">21</div></div>`;
   const topCardsFake = `<div class="top-card-row"><div style="width:40px;height:56px;background:var(--bg3);border-radius:6px;"></div><div class="top-card-info"><div class="top-card-name">████████</div><div class="top-card-meta">██ · Secret Rare</div></div></div>`;
