@@ -481,6 +481,65 @@ body::before{display:none;}
     </div>
 
     <div id="collectionList"></div>
+
+    <!-- Répartition par rareté Premium -->
+    <div class="pc" style="margin-top:0;position:relative;overflow:hidden;">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:14px;">🎴 Répartition par rareté</div>
+      <div id="profilRarityBars"></div>
+    </div>
+
+    <!-- Top cartes Premium -->
+    <div class="pc" style="margin-top:0;position:relative;overflow:hidden;">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:14px;">⭐ Cartes les plus rares</div>
+      <div id="profilTopCards"></div>
+    </div>
+
+    <!-- Progression par set Premium -->
+    <div class="pc" style="margin-top:0;position:relative;overflow:hidden;">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:14px;">📦 Progression par set</div>
+      <div id="profilSetProgress"></div>
+    </div>
+
+    <!-- Top movers Premium -->
+    <div class="pc" style="margin-top:0;position:relative;overflow:hidden;">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:14px;">📈 Top variations 24h</div>
+      <div style="filter:blur(5px);user-select:none;pointer-events:none;" id="topMoversBlur">
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(22,163,74,0.08);border-radius:8px;"><div><div style="font-size:13px;font-weight:600;">Charizard</div><div style="font-size:11px;color:var(--text-dim);">base1 · Rare</div></div><div style="color:#16a34a;font-weight:700;">+18,4%</div></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(22,163,74,0.08);border-radius:8px;"><div><div style="font-size:13px;font-weight:600;">Luffy OP01-003</div><div style="font-size:11px;color:var(--text-dim);">OP01 · Leader</div></div><div style="color:#16a34a;font-weight:700;">+9,1%</div></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(192,57,43,0.08);border-radius:8px;"><div><div style="font-size:13px;font-weight:600;">Mewtwo EX</div><div style="font-size:11px;color:var(--text-dim);">xy · Ultra Rare</div></div><div style="color:#c0392b;font-weight:700;">-6,2%</div></div>
+        </div>
+      </div>
+      <div id="topMoversOverlay" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);backdrop-filter:blur(1px);">
+        <div style="background:var(--bg2);border:1px solid var(--border-strong);border-radius:14px;padding:16px 20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+          <div style="font-size:20px;margin-bottom:4px;">✦</div>
+          <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px;">Fonctionnalité Premium</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-bottom:12px;">Top 3 hausses & baisses de ta collection</div>
+          <button onclick="switchPageById('pagePremium')" style="background:var(--gold);border:none;color:#1a1a2e;padding:9px 18px;border-radius:9px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">Débloquer Premium</button>
+        </div>
+      </div>
+      <div id="profilTopMovers" style="display:none;"></div>
+    </div>
+
+    <!-- Graphique 30j Premium -->
+    <div class="pc" style="margin-top:0;position:relative;overflow:hidden;">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:14px;">📊 Évolution (30j)</div>
+      <div style="filter:blur(4px);user-select:none;pointer-events:none;" id="priceChartBlur">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><div style="font-size:22px;font-weight:700;color:var(--navy);font-family:Georgia,serif;">1 247,83 €</div><div style="font-size:12px;font-weight:600;color:#16a34a;">+4,2% sur 30j</div></div>
+        <svg viewBox="0 0 300 70" style="width:100%;height:70px;"><polyline points="0,55 30,48 60,42 90,38 120,44 150,32 180,28 210,22 240,18 270,24 300,14" fill="none" stroke="#c9a84c" stroke-width="2" stroke-linejoin="round"/></svg>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-top:4px;"><span>J-30</span><span>Aujourd'hui</span></div>
+      </div>
+      <div id="priceChartOverlay" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);backdrop-filter:blur(1px);">
+        <div style="background:var(--bg2);border:1px solid var(--border-strong);border-radius:14px;padding:16px 20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+          <div style="font-size:20px;margin-bottom:4px;">✦</div>
+          <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px;">Fonctionnalité Premium</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-bottom:12px;">Graphique d'évolution sur 30 jours</div>
+          <button onclick="switchPageById('pagePremium')" style="background:var(--gold);border:none;color:#1a1a2e;padding:9px 18px;border-radius:9px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">Débloquer Premium</button>
+        </div>
+      </div>
+      <div id="profilPriceChart" style="display:none;"></div>
+    </div>
+
   </div>
 </div>
 
@@ -562,66 +621,6 @@ body::before{display:none;}
     <div class="pc" style="margin-top:0;">
       <div class="pc-title" style="margin-bottom:6px;">Wishlist</div>
       <div id="profilWishSummary" style="font-size:13px;color:var(--text-dim);"></div>
-    </div>
-
-    <!-- Top movers Premium — statique blurré -->
-    <div class="pc" style="margin-top:0;position:relative;overflow:hidden;">
-      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:14px;">📈 Top variations 24h / 30j</div>
-      <div style="filter:blur(5px);user-select:none;pointer-events:none;">
-        <div style="display:flex;flex-direction:column;gap:6px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(22,163,74,0.08);border-radius:8px;">
-            <div><div style="font-size:13px;font-weight:600;">Charizard</div><div style="font-size:11px;color:var(--text-dim);">base1 · Rare</div></div>
-            <div style="color:#16a34a;font-weight:700;">+18,4%</div>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(22,163,74,0.08);border-radius:8px;">
-            <div><div style="font-size:13px;font-weight:600;">Luffy OP01-003</div><div style="font-size:11px;color:var(--text-dim);">OP01 · Leader</div></div>
-            <div style="color:#16a34a;font-weight:700;">+9,1%</div>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(22,163,74,0.08);border-radius:8px;">
-            <div><div style="font-size:13px;font-weight:600;">Pikachu ex</div><div style="font-size:11px;color:var(--text-dim);">sv · Ultra Rare</div></div>
-            <div style="color:#16a34a;font-weight:700;">+5,3%</div>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(192,57,43,0.08);border-radius:8px;">
-            <div><div style="font-size:13px;font-weight:600;">Mewtwo EX</div><div style="font-size:11px;color:var(--text-dim);">xy · Ultra Rare</div></div>
-            <div style="color:#c0392b;font-weight:700;">-6,2%</div>
-          </div>
-        </div>
-      </div>
-      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);backdrop-filter:blur(1px);">
-        <div style="background:var(--bg2);border:1px solid var(--border-strong);border-radius:14px;padding:16px 20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
-          <div style="font-size:20px;margin-bottom:4px;">✦</div>
-          <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px;">Fonctionnalité Premium</div>
-          <div style="font-size:11px;color:var(--text-dim);margin-bottom:12px;">Top 3 hausses & baisses de ta collection</div>
-          <button onclick="switchPageById('pagePremium')" style="background:var(--gold);border:none;color:#1a1a2e;padding:9px 18px;border-radius:9px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">Débloquer Premium</button>
-        </div>
-      </div>
-      <!-- Contenu réel (injecté par JS si Premium) -->
-      <div id="profilTopMovers" style="display:none;"></div>
-    </div>
-
-    <!-- Graphique 30j Premium — statique blurré -->
-    <div class="pc" style="margin-top:0;position:relative;overflow:hidden;">
-      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:14px;">📊 Évolution de ta collection (30j)</div>
-      <div style="filter:blur(4px);user-select:none;pointer-events:none;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <div style="font-size:22px;font-weight:700;color:var(--navy);font-family:Georgia,serif;">1 247,83 €</div>
-          <div style="font-size:12px;font-weight:600;color:#16a34a;">+4,2% sur 30j</div>
-        </div>
-        <svg viewBox="0 0 300 70" style="width:100%;height:70px;">
-          <polyline points="0,55 30,48 60,42 90,38 120,44 150,32 180,28 210,22 240,18 270,24 300,14" fill="none" stroke="#c9a84c" stroke-width="2" stroke-linejoin="round"/>
-        </svg>
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-top:4px;"><span>J-30</span><span>Aujourd'hui</span></div>
-      </div>
-      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,0.5);backdrop-filter:blur(1px);">
-        <div style="background:var(--bg2);border:1px solid var(--border-strong);border-radius:14px;padding:16px 20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
-          <div style="font-size:20px;margin-bottom:4px;">✦</div>
-          <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px;">Fonctionnalité Premium</div>
-          <div style="font-size:11px;color:var(--text-dim);margin-bottom:12px;">Graphique d'évolution sur 30 jours</div>
-          <button onclick="switchPageById('pagePremium')" style="background:var(--gold);border:none;color:#1a1a2e;padding:9px 18px;border-radius:9px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">Débloquer Premium</button>
-        </div>
-      </div>
-      <!-- Contenu réel (injecté par JS si Premium) -->
-      <div id="profilPriceChart" style="display:none;"></div>
     </div>
 
     <!-- Premium teaser -->
@@ -1275,6 +1274,7 @@ async function renderCollectionPage(){
   }
 
   renderCollectionList();
+  renderProfilPremiumSections();
 }
 function removeCollection(e,id){
   e.stopPropagation();
@@ -1412,18 +1412,70 @@ async function renderProfilPage(){
   // Teaser Premium
   const teaser = document.getElementById('premiumTeaser');
   if (teaser) {
-    if(isPremium) {
-      teaser.style.display = 'none';
-    } else if(!currentUser) {
-      teaser.style.display = '';
-      teaser.querySelector('.premium-teaser-title').textContent = 'Débloquez tout le potentiel';
-      teaser.querySelector('.premium-teaser-sub').textContent = 'Crée un compte gratuit pour commencer';
-    } else {
-      teaser.style.display = '';
+    if(isPremium) { teaser.style.display = 'none'; }
+    else if(!currentUser) { teaser.style.display = ''; teaser.querySelector('.premium-teaser-title').textContent = 'Débloquez tout le potentiel'; teaser.querySelector('.premium-teaser-sub').textContent = 'Crée un compte gratuit pour commencer'; }
+    else { teaser.style.display = ''; }
+  }
+}
+
+async function renderProfilPremiumSections() {
+  const items = Object.values(collection);
+  const rarityCounts={};
+  const RARITY_ORDER=['SecretRare','Leader','SuperRare','Special','Rare','Uncommon','Common'];
+  items.forEach(i=>{ const r=i.card.rarity; if(r) rarityCounts[r]=(rarityCounts[r]||0)+i.qty; });
+  const maxCount=Math.max(1,...Object.values(rarityCounts));
+  const rarityBarsEl = document.getElementById('profilRarityBars');
+  const topCardsEl = document.getElementById('profilTopCards');
+  const setProgressEl = document.getElementById('profilSetProgress');
+
+  const premiumLock = (el, fakeContent) => {
+    el.innerHTML = `
+      <div style="position:relative;overflow:hidden;border-radius:10px;">
+        <div style="filter:blur(4px);pointer-events:none;user-select:none;opacity:0.6;">${fakeContent}</div>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(245,245,247,0.5);backdrop-filter:blur(2px);">
+          <div style="font-size:22px;margin-bottom:6px;">🔒</div>
+          <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px;">${currentLang==='fr'?'Fonctionnalité Premium':'Premium feature'}</div>
+          <button onclick="switchPageById('pagePremium')" style="background:var(--gold);border:none;color:#1a1a2e;padding:7px 16px;border-radius:8px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;">✦ Débloquer</button>
+        </div>
+      </div>`;
+  };
+
+  const rarityFake = `<div class="rarity-bar-row"><div class="rarity-bar-label">Secret Rare</div><div class="rarity-bar-track"><div class="rarity-bar-fill" style="width:30%;background:#c0392b;"></div></div><div class="rarity-bar-count">3</div></div><div class="rarity-bar-row"><div class="rarity-bar-label">Super Rare</div><div class="rarity-bar-track"><div class="rarity-bar-fill" style="width:55%;background:#b45309;"></div></div><div class="rarity-bar-count">8</div></div><div class="rarity-bar-row"><div class="rarity-bar-label">Rare</div><div class="rarity-bar-track"><div class="rarity-bar-fill" style="width:100%;background:#6b7280;"></div></div><div class="rarity-bar-count">21</div></div>`;
+  const topCardsFake = `<div class="top-card-row"><div style="width:40px;height:56px;background:var(--bg3);border-radius:6px;"></div><div class="top-card-info"><div class="top-card-name">████████</div><div class="top-card-meta">██ · Secret Rare</div></div></div>`;
+  const setProgressFake = `<div class="set-progress-row"><div class="set-progress-header"><span class="set-progress-name">OP01</span><span class="set-progress-pct">12/102 · 12%</span></div><div class="set-progress-track"><div class="set-progress-fill" style="width:12%"></div></div></div>`;
+
+  if(!isPremium) {
+    if(rarityBarsEl) premiumLock(rarityBarsEl, rarityFake);
+    if(topCardsEl) premiumLock(topCardsEl, topCardsFake);
+    if(setProgressEl) premiumLock(setProgressEl, setProgressFake);
+  } else {
+    if(rarityBarsEl) rarityBarsEl.innerHTML=RARITY_ORDER.filter(r=>rarityCounts[r]).map(r=>`
+      <div class="rarity-bar-row"><div class="rarity-bar-label">${RARITY_LABELS[r]}</div><div class="rarity-bar-track"><div class="rarity-bar-fill" style="width:${Math.round(rarityCounts[r]/maxCount*100)}%;background:${RARITY_COLORS[r]};"></div></div><div class="rarity-bar-count">${rarityCounts[r]}</div></div>`).join('') || emptyState('Ajoute des cartes pour voir la répartition');
+    const topCards=[...items].sort((a,b)=>(rarityRank[a.card.rarity]??9)-(rarityRank[b.card.rarity]??9)).slice(0,5);
+    if(topCardsEl) topCardsEl.innerHTML=topCards.length?topCards.map(item=>`
+      <div class="top-card-row" onclick="openModal(${JSON.stringify(item.card).replace(/"/g,'&quot;')})">
+        <img class="top-card-thumb" src="${imgUrl((currentLang==='fr'&&item.card.image_url_fr)||item.card.image_url)||''}" onerror="this.style.opacity=0">
+        <div class="top-card-info"><div class="top-card-name">${(currentLang==='fr'&&item.card.name_fr)||item.card.name||'—'}</div><div class="top-card-meta">${item.card.set_id||''} · ${RARITY_LABELS[item.card.rarity]||''}</div></div>
+        <span class="badge badge-rarity" style="font-size:9.5px;">${RARITY_LABELS[item.card.rarity]||''}</span>
+      </div>`).join('') : emptyState('Tes cartes les plus rares apparaîtront ici');
+    if(setProgressEl) {
+      const sets=new Set(items.map(i=>i.card.set_id));
+      if(!items.length){ setProgressEl.innerHTML=emptyState('Ajoute des cartes pour suivre ta progression'); }
+      else {
+        const setIds=[...sets]; const ownedBySet={};
+        items.forEach(i=>{const s=i.card.set_id;ownedBySet[s]=(ownedBySet[s]||0)+1;});
+        const setTotals={};
+        await Promise.all(setIds.map(async s=>{
+          const r=await fetch(`${SB_URL}/rest/v1/cards?set_id=eq.${s}&select=id`,{headers:{"apikey":SB_KEY,"Authorization":`Bearer ${SB_KEY}`,"Prefer":"count=exact","Range":"0-0"}});
+          setTotals[s]=parseInt(r.headers.get('content-range')?.split('/')[1]||'0');
+        }));
+        setProgressEl.innerHTML=setIds.sort().map(s=>{
+          const owned=ownedBySet[s]||0;const total=setTotals[s]||0;const pct=total?Math.round(owned/total*100):0;
+          return `<div class="set-progress-row"><div class="set-progress-header"><span class="set-progress-name">${s}</span><span class="set-progress-pct">${owned}/${total} · ${pct}%</span></div><div class="set-progress-track"><div class="set-progress-fill" style="width:${pct}%"></div></div></div>`;
+        }).join('');
+      }
     }
   }
-
-  // Top movers + graphique 30j
   await renderTopMovers();
   await renderPriceChart();
 }
@@ -1431,11 +1483,12 @@ async function renderProfilPage(){
 async function renderTopMovers() {
   const el = document.getElementById('profilTopMovers');
   if (!el) return;
-  if (!isPremium) return; // La version blurrée est déjà dans le HTML
+  if (!isPremium) return;
   el.style.display = '';
-  // Cacher le bloc blurré
-  el.closest('.pc').querySelector('div[style*="filter:blur"]').style.display = 'none';
-  el.closest('.pc').querySelector('div[style*="position:absolute"]').style.display = 'none';
+  const blurEl = document.getElementById('topMoversBlur');
+  const overlayEl = document.getElementById('topMoversOverlay');
+  if(blurEl) blurEl.style.display = 'none';
+  if(overlayEl) overlayEl.style.display = 'none';
 
   // Fetch price_history des 2 derniers jours pour les cartes de la collection
   const cardIds = Object.keys(collection);
@@ -1495,10 +1548,12 @@ async function renderTopMovers() {
 async function renderPriceChart() {
   const el = document.getElementById('profilPriceChart');
   if (!el) return;
-  if (!isPremium) return; // La version blurrée est déjà dans le HTML
+  if (!isPremium) return;
   el.style.display = '';
-  el.closest('.pc').querySelector('div[style*="filter:blur"]').style.display = 'none';
-  el.closest('.pc').querySelector('div[style*="position:absolute"]').style.display = 'none';
+  const blurEl = document.getElementById('priceChartBlur');
+  const overlayEl = document.getElementById('priceChartOverlay');
+  if(blurEl) blurEl.style.display = 'none';
+  if(overlayEl) overlayEl.style.display = 'none';
 
   // Fetch snapshots collection depuis localStorage
   const snapshot = JSON.parse(localStorage.getItem('nakama_value_snapshot')||'{}');
