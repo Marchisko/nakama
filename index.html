@@ -694,8 +694,9 @@ body::before{display:none;}
       <div class="price-section" id="priceSection">
         <div class="price-header">
           <div class="price-section-title">💰 Prix marché</div>
-          <div class="price-toggle">
+          <div class="price-toggle" id="priceToggleWrap">
             <button class="price-toggle-btn active" id="btnPriceEN" onclick="setPriceLang('EN')">EN</button>
+            <button class="price-toggle-btn" id="btnPriceFR" onclick="setPriceLang('FR')" style="display:none;">FR</button>
             <button class="price-toggle-btn" id="btnPriceJP" onclick="setPriceLang('JP')">JP</button>
           </div>
         </div>
@@ -1047,12 +1048,20 @@ function openModal(c){
     : 'https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=';
   document.getElementById('cmLink').href = cmBase + encodeURIComponent(c.name||'');
   document.getElementById('ebayLink').href=buildEbayUrl(c);
-  // Reset price display and load
+  // Reset price display
   currentPriceLang = 'EN';
   document.getElementById('btnPriceEN').classList.add('active');
   document.getElementById('btnPriceJP').classList.remove('active');
-  // Cacher le toggle EN/JP pour Pokémon
-  document.querySelector('.price-toggle').style.display = currentGame === 'pokemon' ? 'none' : 'flex';
+  const frBtn = document.getElementById('btnPriceFR');
+  if(frBtn) {
+    frBtn.classList.remove('active');
+    // Afficher FR uniquement pour Pokémon
+    frBtn.style.display = currentGame === 'pokemon' ? '' : 'none';
+  }
+  // Pour Pokémon : toggle EN/FR/JP visible. Pour OP : EN/JP
+  document.getElementById('btnPriceJP').style.display = '';
+  document.getElementById('btnPriceEN').style.display = '';
+  document.querySelector('.price-toggle').style.display = 'flex';
   document.getElementById('mImg').src=imgUrl((currentLang==='fr'&&c.image_url_fr)||c.image_url)||'';
   loadCardPrice(c.id);
   updateModalBtns();
@@ -1064,6 +1073,8 @@ function openModal(c){
   }
   document.getElementById('modal').classList.add('open');
   document.body.style.overflow='hidden';
+  document.body.style.position='fixed';
+  document.body.style.width='100%';
 }
 
 function updateModalBtns(){
@@ -1112,6 +1123,8 @@ function toggleWishlist(){
 function closeModal(){
   document.getElementById('modal').classList.remove('open');
   document.body.style.overflow='';
+  document.body.style.position='';
+  document.body.style.width='';
   // Vider le champ de recherche pour éviter l'autocomplete qui déclenche une recherche vide
   const input=document.getElementById('searchInput');
   if(input.value && !st.search){
@@ -2294,7 +2307,7 @@ function requirePremium(action) {
 }
 
 // ===== REVENUECAT =====
-const RC_API_KEY = 'REVENUECAT_PUBLIC_KEY'; // À remplacer avec ta clé
+const RC_API_KEY = 'test_gVeHJvrBfekndsyyLBHLlkBpCNh';
 
 async function initRevenueCat() {
   if(!currentUser) return;
@@ -2335,9 +2348,9 @@ async function purchasePlan(plan) {
 
   // Map plan vers product ID RevenueCat
   const productIds = {
-    weekly: 'nakama_premium_weekly',
-    monthly: 'nakama_premium_monthly',
-    annual: 'nakama_premium_annual'
+    weekly: 'lifetime',
+    monthly: 'yearly',
+    annual: 'monthly'
   };
 
   const productId = productIds[plan];
@@ -2394,7 +2407,7 @@ async function loadCardPrice(cardId){
   const wrap = document.getElementById('priceChartWrap');
   wrap.innerHTML = '<div class="price-chart-empty"><div class="price-chart-icon">⏳</div><div class="price-chart-msg">Chargement...</div></div>';
   try {
-    const r1 = await fetch(`${SB_URL}/rest/v1/prices?card_id=eq.${cardId}&select=*`, {
+    const r1 = await fetch(`${SB_URL}/rest/v1/prices?card_id=eq.${cardId}&select=*,price_low_eur,price_trend_eur,price_avg30_eur`, {
       headers: {"apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`}
     });
     const priceData = await r1.json();
@@ -2411,6 +2424,8 @@ function setPriceLang(lang){
   currentPriceLang = lang;
   document.getElementById('btnPriceEN').classList.toggle('active', lang === 'EN');
   document.getElementById('btnPriceJP').classList.toggle('active', lang === 'JP');
+  const frBtn = document.getElementById('btnPriceFR');
+  if(frBtn) frBtn.classList.toggle('active', lang === 'FR');
   renderPriceDisplay();
 }
 
@@ -2425,14 +2440,58 @@ function renderPriceDisplay(){
     ? new Date(currentPriceData.last_updated).toLocaleDateString('fr-FR')
     : '—';
 
-  // ── POKÉMON : low / mid / market ─────────────────────────────────────────
+  // ── POKÉMON ─────────────────────────────────────────────────────────────────
   if(currentGame === 'pokemon'){
+
+    // Mode FR — prix Cardmarket
+    if(currentPriceLang === 'FR') {
+      const avg = currentPriceData.price_eur;
+      const low = currentPriceData.price_low_eur;
+      const trend = currentPriceData.price_trend_eur;
+      const avg30 = currentPriceData.price_avg30_eur;
+
+      if(!avg && !low && !trend) {
+        wrap.innerHTML = '<div class="price-na">Prix FR non disponible pour cette carte</div>';
+        return;
+      }
+
+      const frRow = (label, val, isMain=false) => {
+        if(!val) return '';
+        return `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+            <div>
+              <div style="font-size:10px;color:${isMain?'var(--gold)':'var(--text-dim)'};text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;">${label}</div>
+              <div style="font-size:${isMain?'24':'18'}px;font-weight:${isMain?'700':'600'};color:var(--navy);font-family:Georgia,serif;">${val.toFixed(2)} €</div>
+            </div>
+          </div>`;
+      };
+
+      wrap.innerHTML = `
+        <div class="price-display">
+          <div style="font-size:10px;color:var(--text-dim);margin-bottom:2px;">🇫🇷 Marché Cardmarket FR</div>
+          ${frRow(currentLang==='fr'?'Moyenne des ventes':'Average sale', avg, true)}
+          ${frRow(currentLang==='fr'?'Tendance 30j':'30-day trend', avg30)}
+          ${frRow(currentLang==='fr'?'Prix bas':'Low price', low)}
+          ${frRow(currentLang==='fr'?'Tendance':'Trend', trend)}
+          <div class="price-source">Source: Cardmarket · ${updated}</div>
+        </div>`;
+      return;
+    }
+
+    // Mode EN — TCGPlayer
     const low    = currentPriceData.price_low_usd;
     const mid    = currentPriceData.price_mid_usd;
     const market = currentPriceData.price_market_usd || currentPriceData.price_usd;
-    const eur    = currentPriceData.price_eur;
 
     if(!low && !mid && !market){
+      // Mode JP
+      if(currentPriceLang === 'JP') {
+        const jp = currentPriceData.price_jp_usd;
+        if(!jp) { wrap.innerHTML = '<div class="price-na">Prix JP non disponible</div>'; return; }
+        const jpEur = (jp * EUR_RATE).toFixed(2);
+        wrap.innerHTML = `<div class="price-display"><div style="font-size:10px;color:var(--text-dim);margin-bottom:2px;">🇯🇵 Marché Japonais</div><div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;"><div><div style="font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;">Non gradé</div><div style="font-size:24px;font-weight:700;color:var(--navy);font-family:Georgia,serif;">${jpEur} €</div></div><div style="font-size:11px;color:var(--text-dim);">${jp.toFixed(2)} $</div></div><div class="price-source">Source: PriceCharting · ${updated}</div></div>`;
+        return;
+      }
       wrap.innerHTML = '<div class="price-na">Prix non disponible pour cette carte</div>';
       return;
     }
