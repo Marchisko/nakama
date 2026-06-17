@@ -713,6 +713,13 @@ body::before{display:none;}
       </div>
       <!-- Champ prix d'achat + P&L -->
       <div id="purchasePriceWrap" style="display:none;margin-top:10px;padding:12px;background:var(--bg3);border-radius:12px;">
+        <!-- Sélecteur version -->
+        <div style="font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;" id="cardVersionLabel">Version de la carte</div>
+        <div style="display:flex;gap:6px;margin-bottom:12px;" id="cardVersionSelector">
+          <button onclick="setCardVersion('EN')" id="versionEN" style="flex:1;padding:7px;border:1.5px solid var(--navy);border-radius:8px;font-size:12px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;background:var(--navy);color:#fff;">EN</button>
+          <button onclick="setCardVersion('FR')" id="versionFR" style="flex:1;padding:7px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;background:none;color:var(--text-dim);">FR</button>
+          <button onclick="setCardVersion('JP')" id="versionJP" style="flex:1;padding:7px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;background:none;color:var(--text-dim);">JP</button>
+        </div>
         <div style="font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;" id="purchasePriceLabel">Prix d'achat (optionnel)</div>
         <div style="display:flex;align-items:center;gap:8px;">
           <input type="number" id="purchasePriceInput" placeholder="0.00" step="0.01" min="0"
@@ -1051,7 +1058,10 @@ function openModal(c){
   updateModalBtns();
   // Show/hide purchase price wrap based on collection status
   const wrap2 = document.getElementById('purchasePriceWrap');
-  if(wrap2) wrap2.style.display = collection[c.id] ? '' : 'none';
+  if(wrap2) {
+    wrap2.style.display = collection[c.id] ? '' : 'none';
+    if(collection[c.id]) initVersionSelector(c.id);
+  }
   document.getElementById('modal').classList.add('open');
   document.body.style.overflow='hidden';
 }
@@ -1073,7 +1083,7 @@ function toggleCollection(){
     showToast(`+1 · ${(currentLang==='fr'&&currentCard.name_fr)||currentCard.name} (×${collection[currentCard.id].qty})`);
     saveCollectionItem(currentCard.id, collection[currentCard.id].qty, cardData(currentCard), collection[currentCard.id].purchasePrice);
   } else {
-    collection[currentCard.id]={qty:1,card:cardData(currentCard),purchasePrice:null};
+    collection[currentCard.id]={qty:1,card:cardData(currentCard),purchasePrice:null,cardVersion:'EN'};
     showToast(`✓ ${(currentLang==='fr'&&currentCard.name_fr)||currentCard.name} ajouté !`);
     saveCollectionItem(currentCard.id, 1, cardData(currentCard), null);
   }
@@ -1082,6 +1092,7 @@ function toggleCollection(){
   if(wrap) {
     wrap.style.display = '';
     document.getElementById('purchasePriceInput').value = collection[currentCard.id].purchasePrice || '';
+    initVersionSelector(currentCard.id);
     updatePLDisplay(currentCard.id);
   }
   save();updateModalBtns();renderCollectionPage();
@@ -1146,7 +1157,7 @@ async function renderCollectionList(){
       <img class="list-thumb" src="${imgUrl(imgSrc)||''}" onerror="this.style.opacity=0">
       <div class="list-info">
         <div class="list-name">${nameFR||'—'}</div>
-        <div class="list-meta">${collTab==='pokemon'?(PK_SET_NAMES[item.card.set_id]||item.card.set_id):item.card.set_id||''} · ${RARITY_LABELS[item.card.rarity]||item.card.rarity||''}</div>
+        <div class="list-meta">${collTab==='pokemon'?(PK_SET_NAMES[item.card.set_id]||item.card.set_id):item.card.set_id||''} · ${RARITY_LABELS[item.card.rarity]||item.card.rarity||''} <span style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;color:var(--text-dim);margin-left:4px;">${item.cardVersion||'EN'}</span></div>
         ${plHtml}
       </div>
       <div class="list-right">
@@ -1937,12 +1948,32 @@ async function loadFromSupabase() {
   ]);
   if (collRes.data) {
     collection = {};
-    collRes.data.forEach(row => { collection[row.card_id] = { qty: row.qty, card: row.card_data, purchasePrice: row.purchase_price || null }; });
+    collRes.data.forEach(row => { collection[row.card_id] = { qty: row.qty, card: row.card_data, purchasePrice: row.purchase_price || null, cardVersion: row.card_version || 'EN' }; });
   }
   if (wishRes.data) {
     wishlist = {};
     wishRes.data.forEach(row => { wishlist[row.card_id] = { card: row.card_data, addedAt: new Date(row.added_at).getTime() }; });
   }
+}
+
+function setCardVersion(version) {
+  if(!currentCard || !collection[currentCard.id]) return;
+  collection[currentCard.id].cardVersion = version;
+  save();
+  saveCollectionItem(currentCard.id, collection[currentCard.id].qty, cardData(currentCard), collection[currentCard.id].purchasePrice);
+  // Update UI
+  ['EN','FR','JP'].forEach(v => {
+    const btn = document.getElementById(`version${v}`);
+    if(!btn) return;
+    if(v === version) { btn.style.background = 'var(--navy)'; btn.style.color = '#fff'; btn.style.borderColor = 'var(--navy)'; btn.style.fontWeight = '700'; }
+    else { btn.style.background = 'none'; btn.style.color = 'var(--text-dim)'; btn.style.borderColor = 'var(--border)'; btn.style.fontWeight = '600'; }
+  });
+  updatePLDisplay(currentCard.id);
+}
+
+function initVersionSelector(cardId) {
+  const version = (collection[cardId] && collection[cardId].cardVersion) || 'EN';
+  setCardVersion(version);
 }
 
 function confirmPurchasePrice() {
@@ -1972,33 +2003,37 @@ async function updatePLDisplay(cardId) {
   if(!el || !collection[cardId]) return;
   const purchasePrice = collection[cardId].purchasePrice;
   if(!purchasePrice) { el.style.display='none'; return; }
+  const version = collection[cardId].cardVersion || 'EN';
 
-  // Fetch prix actuel
   try {
-    const r = await fetch(`${SB_URL}/rest/v1/prices?card_id=eq.${cardId}&select=price_market_usd,price_eur`, {
+    const r = await fetch(`${SB_URL}/rest/v1/prices?card_id=eq.${cardId}&select=price_market_usd,price_eur,price_avg30_eur,price_jp_usd`, {
       headers: {"apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`}
     });
     const data = await r.json();
     if(!data[0]) { el.style.display='none'; return; }
-    const currentPrice = data[0].price_eur || (data[0].price_market_usd * EUR_RATE);
+
+    let currentPrice;
+    if(version === 'FR') currentPrice = data[0].price_eur || data[0].price_avg30_eur;
+    else if(version === 'JP') currentPrice = data[0].price_jp_usd ? data[0].price_jp_usd * EUR_RATE : null;
+    else currentPrice = data[0].price_market_usd ? data[0].price_market_usd * EUR_RATE : null;
+
     if(!currentPrice) { el.style.display='none'; return; }
 
     const qty = collection[cardId].qty || 1;
-    const totalPurchase = purchasePrice * qty;
-    const totalCurrent = currentPrice * qty;
-    const diff = totalCurrent - totalPurchase;
-    const pct = ((diff / totalPurchase) * 100).toFixed(1);
+    const diff = (currentPrice - parseFloat(purchasePrice)) * qty;
+    const pct = ((diff / (parseFloat(purchasePrice) * qty)) * 100).toFixed(1);
     const sign = diff >= 0 ? '+' : '';
     const color = diff >= 0 ? '#16a34a' : '#c0392b';
     const arrow = diff >= 0 ? '▲' : '▼';
 
     el.style.display = '';
-    el.innerHTML = `<span style="color:${color};">${arrow} ${sign}${diff.toFixed(2)} € (${sign}${pct}%)</span> <span style="color:var(--text-dim);font-size:11px;font-weight:400;">· actuel ${currentPrice.toFixed(2)} €</span>`;
+    el.innerHTML = `<span style="color:${color};">${arrow} ${sign}${diff.toFixed(2)} € (${sign}${pct}%)</span> <span style="color:var(--text-dim);font-size:11px;">· ${version} · actuel ${currentPrice.toFixed(2)} €</span>`;
   } catch(e) { el.style.display='none'; }
 }
 
 async function saveCollectionItem(cardId, qty, cardDataObj, purchasePrice) {
   if (!currentUser) { save(); return; }
+  const version = (collection[cardId] && collection[cardId].cardVersion) || 'EN';
   if (qty <= 0) {
     await sbClient.from('user_collections').delete().eq('user_id', currentUser.id).eq('card_id', cardId);
   } else {
@@ -2008,7 +2043,8 @@ async function saveCollectionItem(cardId, qty, cardDataObj, purchasePrice) {
       qty,
       card_data: cardDataObj,
       purchase_price: purchasePrice || null,
-      purchase_date: purchasePrice ? new Date().toISOString().slice(0,10) : null
+      purchase_date: purchasePrice ? new Date().toISOString().slice(0,10) : null,
+      card_version: version
     }, { onConflict: 'user_id,card_id' });
   }
   save();
