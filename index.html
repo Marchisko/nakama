@@ -1829,6 +1829,7 @@ async function fetchPremiumStatus() {
 sbClient.auth.onAuthStateChange(async (event, session) => {
   currentUser = session?.user || null;
   await fetchPremiumStatus();
+  if(currentUser) await initRevenueCat();
   updateUserBtn();
   if (currentUser) {
     await loadFromSupabase();
@@ -1841,6 +1842,7 @@ sbClient.auth.onAuthStateChange(async (event, session) => {
   const { data: { session } } = await sbClient.auth.getSession();
   currentUser = session?.user || null;
   await fetchPremiumStatus();
+  if(currentUser) await initRevenueCat();
   updateUserBtn();
   if (currentUser) {
     await loadFromSupabase();
@@ -2291,13 +2293,96 @@ function requirePremium(action) {
   return true;
 }
 
+// ===== REVENUECAT =====
+const RC_API_KEY = 'REVENUECAT_PUBLIC_KEY'; // À remplacer avec ta clé
+
+async function initRevenueCat() {
+  if(!currentUser) return;
+  try {
+    // Utilise l'API REST RevenueCat (pas de SDK web natif)
+    // On check le statut premium via RevenueCat REST API
+    const resp = await fetch(`https://api.revenuecat.com/v1/subscribers/${currentUser.id}`, {
+      headers: {
+        'Authorization': `Bearer ${RC_API_KEY}`,
+        'Content-Type': 'application/json',
+        'X-Platform': 'web'
+      }
+    });
+    if(!resp.ok) return;
+    const data = await resp.json();
+    const entitlements = data.subscriber?.entitlements || {};
+    const hasPremium = entitlements['premium']?.expires_date
+      ? new Date(entitlements['premium'].expires_date) > new Date()
+      : false;
+
+    if(hasPremium && !isPremium) {
+      // Mettre à jour Supabase si RevenueCat dit premium
+      await sbClient.from('profiles').update({ is_premium: true }).eq('id', currentUser.id);
+      isPremium = true;
+      renderCollectionPage();
+    }
+  } catch(e) {
+    console.warn('RevenueCat check failed:', e);
+  }
+}
+
+async function purchasePlan(plan) {
+  if(!currentUser) {
+    showToast(currentLang==='fr'?'Crée un compte pour accéder à Premium':'Create an account to access Premium');
+    setTimeout(()=>openAuth(), 600);
+    return;
+  }
+
+  // Map plan vers product ID RevenueCat
+  const productIds = {
+    weekly: 'nakama_premium_weekly',
+    monthly: 'nakama_premium_monthly',
+    annual: 'nakama_premium_annual'
+  };
+
+  const productId = productIds[plan];
+  if(!productId) return;
+
+  // Sur web — ouvrir Stripe via RevenueCat Billing
+  // L'URL de checkout RevenueCat Billing
+  const checkoutUrl = `https://billing.revenuecat.com/checkout?product=${productId}&app_user_id=${currentUser.id}&api_key=${RC_API_KEY}`;
+
+  // Ouvrir dans une popup ou rediriger
+  const popup = window.open(checkoutUrl, 'nakama_checkout', 'width=500,height=700,scrollbars=yes');
+
+  if(!popup) {
+    // Si popup bloquée, rediriger directement
+    window.location.href = checkoutUrl;
+    return;
+  }
+
+  // Vérifier toutes les 3s si le paiement est complété
+  const checkInterval = setInterval(async () => {
+    if(popup.closed) {
+      clearInterval(checkInterval);
+      // Vérifier le statut après fermeture
+      await initRevenueCat();
+      if(isPremium) {
+        showToast('✦ ' + (currentLang==='fr' ? 'Premium activé !' : 'Premium activated!'));
+        renderCollectionPage();
+      }
+    }
+  }, 3000);
+}
+
 function handlePremium(plan){
   if(!currentUser){
     showToast(currentLang==='fr'?'Crée un compte pour accéder à Premium':'Create an account to access Premium');
     setTimeout(()=>openAuth(),600);
     return;
   }
-  showToast(currentLang==='fr'?'Bientôt disponible !':'Coming soon!');
+  // Si RevenueCat key est configurée, lancer l'achat
+  if(RC_API_KEY !== 'REVENUECAT_PUBLIC_KEY') {
+    purchasePlan(plan);
+  } else {
+    // Mode dev — afficher message
+    showToast(currentLang==='fr'?'Paiement bientôt disponible !':'Payment coming soon!');
+  }
 }
 
 let currentPriceLang = 'EN';
