@@ -433,9 +433,7 @@ body::before{display:none;}
         </div>
       </div>
       <!-- Contenu réel (affiché si Premium) -->
-      <div id="collTotalValue" style="display:none;">
-        <div style="font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Valeur totale de la collection</div>
-      </div>
+      <div id="collTotalValue" style="display:none;"></div>
     </div>
 
     <!-- Dashboard One Piece -->
@@ -1267,9 +1265,9 @@ async function renderCollectionPage(){
         const color = diff >= 0 ? '#16a34a' : '#c0392b';
         fluctHTML = `<div style="font-size:12px;color:${color};font-weight:600;margin-top:2px;">${sign}${diff.toFixed(2)} € (${sign}${pct}%) vs hier</div>`;
       }
-      realEl.innerHTML += totalValue > 0
+      realEl.innerHTML = `<div style="font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Valeur totale de la collection</div>` + (totalValue > 0
         ? `<div style="font-size:26px;font-weight:700;color:var(--navy);font-family:Georgia,serif;">${totalValue.toFixed(2)} €</div>${fluctHTML}`
-        : `<div style="color:var(--text-dim);font-size:13px;">Ajoute des cartes pour voir la valeur</div>`;
+        : `<div style="color:var(--text-dim);font-size:13px;">Ajoute des cartes pour voir la valeur</div>`);
     }
   }
 
