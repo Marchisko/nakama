@@ -955,8 +955,12 @@ function buildEbayUrl(card){
 }
 
 async function fetchCards(append=false){
+  const searchWords = st.search ? st.search.trim().toLowerCase().split(/\s+/).filter(Boolean) : [];
   let params=[`limit=${LIMIT}`,`offset=${st.offset}`,`order=id`,`game=eq.${currentGame}`];
-  if(st.search) params.push(`name=ilike.*${encodeURIComponent(st.search)}*`);
+  if(searchWords.length > 0){
+    params.push(`name=ilike.*${encodeURIComponent(searchWords[0])}*`);
+    if(searchWords.length > 1) params[0] = `limit=500`;
+  }
   if(st.rarity) params.push(`rarity=eq.${st.rarity}`);
   if(st.set) params.push(`set_id=eq.${st.set}`);
   const r=await fetch(`${SB_URL}/rest/v1/cards?${params.join('&')}&select=id,name,name_fr,set_id,rarity,image_url,image_url_fr,colors,game`,{
@@ -964,7 +968,13 @@ async function fetchCards(append=false){
   });
   const total=parseInt(r.headers.get('content-range')?.split('/')[1]||'0');
   st.total=total;
-  const cards=await r.json();
+  let cards=await r.json();
+  if(searchWords.length > 1){
+    cards = cards.filter(c => {
+      const haystack = ((c.name||'')+(c.name_fr||'')).toLowerCase();
+      return searchWords.every(w => haystack.includes(w));
+    });
+  }
   console.log('fetchCards status:', r.status, 'total:', total, 'cards:', cards?.length, 'first:', cards?.[0]?.name);
   renderCards(cards,append);
   const shown=append ? document.querySelectorAll('#grid .card').length : cards.length;
