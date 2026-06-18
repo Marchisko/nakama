@@ -700,6 +700,15 @@ body::before{display:none;}
             <button class="price-toggle-btn" id="btnPriceFR" onclick="setPriceLang('FR')" style="display:none;">FR</button>
             <button class="price-toggle-btn" id="btnPriceJP" onclick="setPriceLang('JP')">JP</button>
           </div>
+          <!-- Sélecteur édition Pokémon WotC -->
+          <div id="editionToggleWrap" style="display:none;margin-top:6px;">
+            <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Édition</div>
+            <div style="display:flex;gap:4px;">
+              <button class="price-toggle-btn" id="btnEd1st" onclick="setEdition('1st')">1ère Éd.</button>
+              <button class="price-toggle-btn" id="btnEdShadowless" onclick="setEdition('shadowless')" style="display:none;">Shadowless</button>
+              <button class="price-toggle-btn active" id="btnEdUnlimited" onclick="setEdition('unlimited')">Unlimited</button>
+            </div>
+          </div>
         </div>
         <div id="priceChartWrap">
           <div class="price-chart-empty">
@@ -1056,10 +1065,20 @@ function openModal(c){
   ];
   document.getElementById('mBadges').innerHTML=badges.join('');
   document.getElementById('mStats').innerHTML='';
-  const cmBase = currentGame === 'pokemon'
-    ? 'https://www.cardmarket.com/en/Pokemon/Products/Search?searchString='
-    : 'https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=';
-  document.getElementById('cmLink').href = cmBase + encodeURIComponent(c.name||'');
+  // Édition selector
+  currentEdition = 'unlimited';
+  const edWrap = document.getElementById('editionToggleWrap');
+  if(edWrap){
+    const isWotc = currentGame === 'pokemon' && EDITION_SETS.has((c.set_id||'').toLowerCase());
+    edWrap.style.display = isWotc ? '' : 'none';
+    // Shadowless uniquement pour Base Set
+    const shadowlessBtn = document.getElementById('btnEdShadowless');
+    if(shadowlessBtn) shadowlessBtn.style.display = (c.set_id||'').toLowerCase() === 'base1' ? '' : 'none';
+    document.getElementById('btnEd1st').classList.remove('active');
+    document.getElementById('btnEdUnlimited').classList.add('active');
+    if(shadowlessBtn) shadowlessBtn.classList.remove('active');
+  }
+  updateCmLink(c);
   document.getElementById('ebayLink').href=buildEbayUrl(c);
   // Reset price display
   currentPriceLang = 'EN';
@@ -1136,6 +1155,25 @@ function toggleWishlist(){
     saveWishlistItem(currentCard.id, cardData(currentCard), true);
   }
   save();updateModalBtns();renderWishlistPage();
+}
+function updateCmLink(c){
+  const card = c || currentCard;
+  if(!card) return;
+  if(currentGame === 'pokemon'){
+    const name = encodeURIComponent(card.name||'');
+    const edParam = cmEditionParam(currentEdition);
+    document.getElementById('cmLink').href = `https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=${name}${edParam}`;
+  } else {
+    document.getElementById('cmLink').href = 'https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=' + encodeURIComponent(card.name||'');
+  }
+}
+function setEdition(ed){
+  currentEdition = ed;
+  ['1st','shadowless','unlimited'].forEach(e => {
+    const btn = document.getElementById('btnEd'+(e==='1st'?'1st':e==='shadowless'?'Shadowless':'Unlimited'));
+    if(btn) btn.classList.toggle('active', e===ed);
+  });
+  updateCmLink();
 }
 function closeModal(){
   document.getElementById('modal').classList.remove('open');
@@ -2421,6 +2459,14 @@ function handlePremium(plan){
 }
 
 let currentPriceLang = 'EN';
+let currentEdition = 'unlimited'; // '1st', 'shadowless', 'unlimited'
+const EDITION_SETS = new Set(['base1','base2','base3','base4','base5','base6','gym1','gym2','neo1','neo2','neo3','neo4','basep']);
+// Cardmarket edition filter params
+function cmEditionParam(edition){
+  if(edition==='1st') return '&edition=1';
+  if(edition==='shadowless') return '&edition=2';
+  return '';
+}
 let currentPriceData = null;
 let currentPriceHistory = [];
 const EUR_RATE = 0.92;
