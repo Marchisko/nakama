@@ -958,8 +958,10 @@ async function fetchCards(append=false){
   const searchWords = st.search ? st.search.trim().toLowerCase().split(/\s+/).filter(Boolean) : [];
   let params=[`limit=${LIMIT}`,`offset=${st.offset}`,`order=id`,`game=eq.${currentGame}`];
   if(searchWords.length > 0){
-    params.push(`name=ilike.*${encodeURIComponent(searchWords[0])}*`);
-    if(searchWords.length > 1) params[0] = `limit=500`;
+    // On fetch avec or sur name ET name_fr pour couvrir les noms FR (ex: dracaufeu)
+    const w0 = encodeURIComponent(searchWords[0]);
+    params.push(`or=(name.ilike.*${w0}*,name_fr.ilike.*${w0}*)`);
+    params[0] = `limit=500`;
   }
   if(st.rarity) params.push(`rarity=eq.${st.rarity}`);
   if(st.set) params.push(`set_id=eq.${st.set}`);
@@ -971,7 +973,7 @@ async function fetchCards(append=false){
   let cards=await r.json();
   if(searchWords.length > 1){
     cards = cards.filter(c => {
-      const haystack = ((c.name||'')+(c.name_fr||'')).toLowerCase();
+      const haystack = ((c.name||'')+' '+(c.name_fr||'')).toLowerCase();
       return searchWords.every(w => haystack.includes(w));
     });
   }
