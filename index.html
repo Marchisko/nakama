@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Nakama">
@@ -47,7 +47,8 @@ body::before{display:none;}
 .hdr-btn{background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;display:flex;align-items:center;gap:5px;padding:4px 6px;border-radius:8px;transition:color .2s;flex-shrink:0;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;}
 .hdr-btn:hover{color:#e8c56d;}
 .hdr-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
-.hdr-lang{font-size:11px;font-weight:700;letter-spacing:.06em;}
+.hdr-lang{font-size:11px;font-weight:700;letter-spacing:.06em;border:1px solid rgba(255,255,255,.25);padding:4px 8px;border-radius:6px;}
+@media(max-width:480px){.hdr-premium span{display:none;}.hdr-user span{display:none;}}
 .hdr-premium{color:var(--gold-light) !important;opacity:1 !important;}
 .hdr-premium svg{stroke:var(--gold-light);fill:var(--gold-light);}
 .hdr-premium span{font-size:11px;font-weight:700;letter-spacing:.03em;}
@@ -1072,7 +1073,11 @@ function openModal(c){
     if(collection[c.id]) initVersionSelector(c.id);
   }
   document.getElementById('modal').classList.add('open');
+  const scrollY = window.scrollY;
   document.body.style.overflow='hidden';
+  document.body.style.position='fixed';
+  document.body.style.top=`-${scrollY}px`;
+  document.body.style.width='100%';
   document.body.style.position='fixed';
   document.body.style.width='100%';
 }
@@ -1122,7 +1127,12 @@ function toggleWishlist(){
 }
 function closeModal(){
   document.getElementById('modal').classList.remove('open');
+  const scrollY = document.body.style.top;
   document.body.style.overflow='';
+  document.body.style.position='';
+  document.body.style.top='';
+  document.body.style.width='';
+  window.scrollTo(0, parseInt(scrollY || '0') * -1);
   document.body.style.position='';
   document.body.style.width='';
   // Vider le champ de recherche pour éviter l'autocomplete qui déclenche une recherche vide
