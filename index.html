@@ -1176,6 +1176,12 @@ function setEdition(ed){
   });
   updateCmLink();
   if(currentCard) document.getElementById('ebayLink').href = buildEbayUrl(currentCard);
+  const wrap = document.getElementById('priceChartWrap');
+  if(ed === 'unlimited'){
+    if(currentCard) loadCardPrice(currentCard.id);
+  } else {
+    wrap.innerHTML = '<div class="price-chart-empty"><div class="price-chart-icon">🚧</div><div class="price-chart-msg">Prix ' + (ed==='1st'?'1ère édition':'Shadowless') + ' — bientôt disponible</div></div>';
+  }
 }
 function closeModal(){
   document.getElementById('modal').classList.remove('open');
