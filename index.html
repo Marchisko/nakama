@@ -959,7 +959,9 @@ function imgUrl(url){
 }
 
 function buildEbayUrl(card){
-  const query=`${currentGame==='pokemon'?'Pokemon TCG':'One Piece TCG'} ${card.set_id||''} ${card.name||''}`.trim();
+  const edSuffix = (currentGame==='pokemon' && EDITION_SETS.has((card.set_id||'').toLowerCase()) && currentEdition==='1st') ? ' 1st edition' :
+                   (currentGame==='pokemon' && (card.set_id||'').toLowerCase()==='base1' && currentEdition==='shadowless') ? ' shadowless' : '';
+  const query=`${currentGame==='pokemon'?'Pokemon TCG':'One Piece TCG'} ${card.set_id||''} ${card.name||''}${edSuffix}`.trim();
   return `https://www.ebay.fr/sch/i.html?_nkw=${encodeURIComponent(query)}&LH_Sold=1&LH_Complete=1&_sop=13`;
 }
 
@@ -1161,8 +1163,7 @@ function updateCmLink(c){
   if(!card) return;
   if(currentGame === 'pokemon'){
     const name = encodeURIComponent(card.name||'');
-    const edParam = cmEditionParam(currentEdition);
-    document.getElementById('cmLink').href = `https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=${name}${edParam}`;
+    document.getElementById('cmLink').href = `https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=${name}`;
   } else {
     document.getElementById('cmLink').href = 'https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=' + encodeURIComponent(card.name||'');
   }
@@ -1174,6 +1175,7 @@ function setEdition(ed){
     if(btn) btn.classList.toggle('active', e===ed);
   });
   updateCmLink();
+  if(currentCard) document.getElementById('ebayLink').href = buildEbayUrl(currentCard);
 }
 function closeModal(){
   document.getElementById('modal').classList.remove('open');
