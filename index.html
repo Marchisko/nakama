@@ -48,7 +48,7 @@ body::before{display:none;}
 .hdr-btn:hover{color:#e8c56d;}
 .hdr-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
 .hdr-lang{font-size:11px;font-weight:700;letter-spacing:.06em;border:1px solid rgba(255,255,255,.25);padding:4px 8px;border-radius:6px;}
-@media(max-width:480px){.hdr-premium span{display:none;}.hdr-user span{display:none;}}
+@media(max-width:480px){.hdr-premium span{display:none;}.hdr-user span{display:none;}.hdr-lang{display:none;}}
 .hdr-premium{color:var(--gold-light) !important;opacity:1 !important;}
 .hdr-premium svg{stroke:var(--gold-light);fill:var(--gold-light);}
 .hdr-premium span{font-size:11px;font-weight:700;letter-spacing:.03em;}
@@ -279,7 +279,7 @@ body::before{display:none;}
   border-top:none;
   display:flex;justify-content:space-around;
   padding:10px 0 max(18px,env(safe-area-inset-bottom));}
-.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:2px 24px;cursor:pointer;transition:all .2s;opacity:.45;}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:2px 16px;cursor:pointer;transition:all .2s;opacity:.45;}
 .nav-item.active{opacity:1;}
 .nav-svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s;}
 .nav-item.active .nav-svg{stroke:#e8c56d;}
@@ -825,6 +825,10 @@ body::before{display:none;}
   <div class="nav-item" onclick="switchPage('Profil',this)">
     <svg class="nav-svg" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
     <div class="nav-label">Profil</div>
+  </div>
+  <div class="nav-item" id="navLangBtn" onclick="toggleLang()" style="padding:2px 16px;">
+    <svg class="nav-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-2.5 3-4 5.7-4 9s1.5 6 4 9M12 3c2.5 3 4 5.7 4 9s-1.5 6-4 9"/></svg>
+    <div class="nav-label" id="navLangLabel">FR</div>
   </div>
 </div>
 
@@ -1769,6 +1773,8 @@ function applyLang(){
   try{
   const l = currentLang;
   document.getElementById('langBtn').textContent = l === 'fr' ? 'EN' : 'FR';
+  const navLangLabel = document.getElementById('navLangLabel');
+  if(navLangLabel) navLangLabel.textContent = l === 'fr' ? 'EN' : 'FR';
   const tagline = document.getElementById('taglineText');
   if(tagline) tagline.textContent = l === 'fr' ? 'Ton compagnon TCG' : 'Your TCG companion';
   document.getElementById('searchInput').placeholder = t('search');
