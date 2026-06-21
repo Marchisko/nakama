@@ -2462,6 +2462,18 @@ async function initRevenueCat() {
   try {
     // Utilise l'API REST RevenueCat (pas de SDK web natif)
     // On check le statut premium via RevenueCat REST API
+    // D'abord on crée/update le subscriber avec son email pour skip la vérif RC
+    if(currentUser.email) {
+      await fetch(`https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(currentUser.id)}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${RC_API_KEY}`,
+          'Content-Type': 'application/json',
+          'X-Platform': 'web'
+        },
+        body: JSON.stringify({ app_user_id: currentUser.id, attributes: { email: { value: currentUser.email } } })
+      }).catch(()=>{});
+    }
     const resp = await fetch(`https://api.revenuecat.com/v1/subscribers/${currentUser.id}`, {
       headers: {
         'Authorization': `Bearer ${RC_API_KEY}`,
