@@ -48,21 +48,21 @@ body::before{display:none;}
 .hdr-btn:hover{color:#e8c56d;}
 .hdr-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
 .hdr-lang{font-size:11px;font-weight:700;letter-spacing:.06em;border:1px solid rgba(255,255,255,.25);padding:4px 8px;border-radius:6px;}
-.search-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(15,12,30,.97);flex-direction:column;padding:16px;}
-.search-overlay.open{display:flex;}
-.search-overlay-top{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
-.search-overlay-input{flex:1;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:24px;padding:12px 18px;color:#fff;font-size:16px;font-family:'DM Sans',sans-serif;outline:none;-webkit-text-fill-color:#fff;}
-.search-overlay-input::placeholder{color:rgba(255,255,255,.4);}
-.search-overlay-input:focus{border-color:rgba(232,197,109,.6);}
-.search-overlay-close{background:none;border:none;color:rgba(255,255,255,.6);font-size:15px;font-weight:700;cursor:pointer;padding:8px;font-family:'DM Sans',sans-serif;flex-shrink:0;}
-.search-overlay-hint{color:rgba(255,255,255,.3);font-size:12px;padding:0 4px;}
+.search-widget{display:none;position:fixed;bottom:80px;right:16px;z-index:100;}
+.search-widget.open .search-widget-bar{display:flex;}
+.search-widget-fab{width:48px;height:48px;border-radius:50%;background:var(--navy);border:2px solid rgba(255,255,255,.15);box-shadow:0 4px 20px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:20px;}
+.search-widget-bar{display:none;position:absolute;bottom:56px;right:0;background:#1a1a2e;border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:10px 12px;box-shadow:0 8px 32px rgba(0,0,0,.5);width:260px;flex-direction:column;gap:6px;}
+.search-widget-input{width:100%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:24px;padding:10px 16px;color:#fff;font-size:15px;font-family:'DM Sans',sans-serif;outline:none;-webkit-text-fill-color:#fff;box-sizing:border-box;}
+.search-widget-input::placeholder{color:rgba(255,255,255,.35);}
+.search-widget-input:focus{border-color:rgba(232,197,109,.6);}
+.search-widget-close{background:none;border:none;color:rgba(255,255,255,.5);font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:right;padding:0 2px;}
 .hdr-search-btn{display:none;}
 @media(max-width:480px){
-  .hdr-premium span{display:none;}
   .hdr-user span{display:none;}
   .hdr-lang{display:none;}
   .search-wrap{display:none;}
   .hdr-search-btn{display:flex;}
+  .search-widget{display:block;}
 }
 .hdr-premium{color:var(--gold-light) !important;opacity:1 !important;}
 .hdr-premium svg{stroke:var(--gold-light);fill:var(--gold-light);}
@@ -387,13 +387,13 @@ body::before{display:none;}
   </div>
 </div>
 
-<!-- SEARCH OVERLAY -->
-<div class="search-overlay" id="searchOverlay">
-  <div class="search-overlay-top">
-    <input class="search-overlay-input" type="text" placeholder="Chercher une carte..." id="overlaySearchInput" oninput="onOverlaySearch()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-    <button class="search-overlay-close" onclick="closeSearchOverlay()">Annuler</button>
+<!-- SEARCH WIDGET -->
+<div class="search-widget" id="searchWidget">
+  <div class="search-widget-bar" id="searchWidgetBar">
+    <input class="search-widget-input" type="text" placeholder="Chercher une carte..." id="overlaySearchInput" oninput="onOverlaySearch()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    <button class="search-widget-close" onclick="closeSearchOverlay()">✕ Fermer</button>
   </div>
-  <div class="search-overlay-hint">Tapez un nom de carte en FR ou EN</div>
+  <div class="search-widget-fab" onclick="toggleSearchWidget()">🔍</div>
 </div>
 
 <!-- CARTES -->
@@ -1901,12 +1901,15 @@ function applyLang(){
   }catch(e){console.warn('applyLang error:',e);}
 }
 
-function openSearchOverlay(){
-  document.getElementById('searchOverlay').classList.add('open');
-  setTimeout(()=>document.getElementById('overlaySearchInput').focus(),100);
+function toggleSearchWidget(){
+  const w = document.getElementById('searchWidget');
+  const bar = document.getElementById('searchWidgetBar');
+  const isOpen = bar.style.display === 'flex';
+  bar.style.display = isOpen ? 'none' : 'flex';
+  if(!isOpen) setTimeout(()=>document.getElementById('overlaySearchInput').focus(),100);
 }
 function closeSearchOverlay(){
-  document.getElementById('searchOverlay').classList.remove('open');
+  document.getElementById('searchWidgetBar').style.display = 'none';
   document.getElementById('overlaySearchInput').value='';
   document.getElementById('searchInput').value='';
   st.search='';
