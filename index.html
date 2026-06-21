@@ -62,6 +62,10 @@ body::before{display:none;}
   .hdr-lang{display:none;}
   .search-wrap{display:none;}
   .search-widget{display:block;}
+  .header-inner{gap:6px;padding:0 10px;}
+  .logo img{width:26px;height:26px;}
+  .logo svg{display:none;}
+  .hdr-btn.scan-btn{display:none;}
 }
 .hdr-premium{color:var(--gold-light) !important;opacity:1 !important;}
 .hdr-premium svg{stroke:var(--gold-light);fill:var(--gold-light);}
@@ -368,7 +372,7 @@ body::before{display:none;}
       <span class="search-icon">🔍</span>
       <input class="search-input" type="text" placeholder="Chercher une carte..." id="searchInput" oninput="onSearch()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
-    <button class="hdr-btn" onclick="openScan()" title="Scanner une carte">
+    <button class="hdr-btn scan-btn" onclick="openScan()" title="Scanner une carte">
       <svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
     </button>
     <button class="hdr-btn hdr-lang" id="langBtn" onclick="toggleLang()" title="Switch language">FR</button>
