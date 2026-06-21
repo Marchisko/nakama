@@ -1779,7 +1779,7 @@ function applyLang(){
   if(tagline) tagline.textContent = l === 'fr' ? 'Ton compagnon TCG' : 'Your TCG companion';
   document.getElementById('searchInput').placeholder = t('search');
   // Nav labels
-  const navLabels = document.querySelectorAll('.nav-label');
+  const navLabels = document.querySelectorAll('.nav-label:not(#navLangLabel)');
   const navKeys = ['navCards','navCollection','navWishlist','navProfil'];
   navLabels.forEach((el,i)=>{ if(navKeys[i]) el.textContent = t(navKeys[i]); });
   // Hero eyebrows & subtitles
@@ -1876,6 +1876,8 @@ function toggleLang(){
   currentLang = currentLang === 'fr' ? 'en' : 'fr';
   localStorage.setItem('nakama_lang', currentLang);
   applyLang();
+  st.offset = 0;
+  fetchCards();
 }
 
 applyLang();
