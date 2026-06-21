@@ -2506,26 +2506,24 @@ async function purchasePlan(plan) {
     return;
   }
 
-  // Map plan vers product ID RevenueCat
-  const productIds = {
-    weekly: 'nakama_premium_weekly',
-    monthly: 'nakama_premium_annual',
-    annual: 'nakama_premium_monthly'
+  // Liens Stripe Payment Links directs
+  const stripeLinks = {
+    weekly: 'https://buy.stripe.com/3cI7sL0jl6C78YD2aC3ZK02',
+    monthly: 'https://buy.stripe.com/5kQ4gzaXZf8D5Mr16y3ZK00',
+    annual: 'https://buy.stripe.com/28E9ATeab3pVgr55mO3ZK01'
   };
 
-  const productId = productIds[plan];
-  if(!productId) return;
+  const baseUrl = stripeLinks[plan];
+  if(!baseUrl) return;
 
-  // Sur web — ouvrir Stripe via RevenueCat Billing
-  // L'URL de checkout RevenueCat Billing
-  const userEmail = currentUser.email ? `&email=${encodeURIComponent(currentUser.email)}` : '';
-  const checkoutUrl = `https://billing.revenuecat.com/${RC_API_KEY}/subscribe?app_user_id=${encodeURIComponent(currentUser.id)}&product=${productId}${userEmail}`;
+  // Pré-remplir l'email si dispo
+  const emailParam = currentUser.email ? `?prefilled_email=${encodeURIComponent(currentUser.email)}` : '';
+  const checkoutUrl = baseUrl + emailParam;
 
   // Ouvrir dans une popup ou rediriger
   const popup = window.open(checkoutUrl, 'nakama_checkout', 'width=500,height=700,scrollbars=yes');
 
   if(!popup) {
-    // Si popup bloquée, rediriger directement
     window.location.href = checkoutUrl;
     return;
   }
