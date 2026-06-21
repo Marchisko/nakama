@@ -48,15 +48,22 @@ body::before{display:none;}
 .hdr-btn:hover{color:#e8c56d;}
 .hdr-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
 .hdr-lang{font-size:11px;font-weight:700;letter-spacing:.06em;border:1px solid rgba(255,255,255,.25);padding:4px 8px;border-radius:6px;}
-@media(max-width:480px){.hdr-premium span{display:none;}.hdr-user span{display:none;}.hdr-lang{display:none;}.search-wrap{display:none;}}
-
-.mobile-search-bar{display:none;background:#1a1a2e;padding:8px 12px 10px;}
-.mobile-search-bar .search-wrap{position:relative;}
-.mobile-search-bar .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.4);font-size:13px;}
-.mobile-search-bar .search-input{width:100%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:24px;padding:9px 16px 9px 36px;color:#fff;font-size:15px;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box;-webkit-text-fill-color:#fff;}
-.mobile-search-bar .search-input::placeholder{color:rgba(255,255,255,.4);}
-.mobile-search-bar .search-input:focus{border-color:rgba(232,197,109,.5);background:rgba(255,255,255,.15);}
-@media(max-width:480px){.mobile-search-bar{display:block;}}
+.search-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(15,12,30,.97);flex-direction:column;padding:16px;}
+.search-overlay.open{display:flex;}
+.search-overlay-top{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.search-overlay-input{flex:1;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:24px;padding:12px 18px;color:#fff;font-size:16px;font-family:'DM Sans',sans-serif;outline:none;-webkit-text-fill-color:#fff;}
+.search-overlay-input::placeholder{color:rgba(255,255,255,.4);}
+.search-overlay-input:focus{border-color:rgba(232,197,109,.6);}
+.search-overlay-close{background:none;border:none;color:rgba(255,255,255,.6);font-size:15px;font-weight:700;cursor:pointer;padding:8px;font-family:'DM Sans',sans-serif;flex-shrink:0;}
+.search-overlay-hint{color:rgba(255,255,255,.3);font-size:12px;padding:0 4px;}
+.hdr-search-btn{display:none;}
+@media(max-width:480px){
+  .hdr-premium span{display:none;}
+  .hdr-user span{display:none;}
+  .hdr-lang{display:none;}
+  .search-wrap{display:none;}
+  .hdr-search-btn{display:flex;}
+}
 .hdr-premium{color:var(--gold-light) !important;opacity:1 !important;}
 .hdr-premium svg{stroke:var(--gold-light);fill:var(--gold-light);}
 .hdr-premium span{font-size:11px;font-weight:700;letter-spacing:.03em;}
@@ -362,6 +369,9 @@ body::before{display:none;}
       <span class="search-icon">🔍</span>
       <input class="search-input" type="text" placeholder="Chercher une carte..." id="searchInput" oninput="onSearch()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
+    <button class="hdr-btn hdr-search-btn" onclick="openSearchOverlay()" title="Rechercher">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+    </button>
     <button class="hdr-btn" onclick="openScan()" title="Scanner une carte">
       <svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
     </button>
@@ -377,12 +387,13 @@ body::before{display:none;}
   </div>
 </div>
 
-<!-- MOBILE SEARCH BAR -->
-<div class="mobile-search-bar" id="mobileSearchBar">
-  <div class="search-wrap">
-    <span class="search-icon">🔍</span>
-    <input class="search-input" type="text" placeholder="Chercher une carte..." id="mobileSearchInput" oninput="onMobileSearch()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+<!-- SEARCH OVERLAY -->
+<div class="search-overlay" id="searchOverlay">
+  <div class="search-overlay-top">
+    <input class="search-overlay-input" type="text" placeholder="Chercher une carte..." id="overlaySearchInput" oninput="onOverlaySearch()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    <button class="search-overlay-close" onclick="closeSearchOverlay()">Annuler</button>
   </div>
+  <div class="search-overlay-hint">Tapez un nom de carte en FR ou EN</div>
 </div>
 
 <!-- CARTES -->
@@ -1890,8 +1901,19 @@ function applyLang(){
   }catch(e){console.warn('applyLang error:',e);}
 }
 
-function onMobileSearch(){
-  const val = document.getElementById('mobileSearchInput').value;
+function openSearchOverlay(){
+  document.getElementById('searchOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('overlaySearchInput').focus(),100);
+}
+function closeSearchOverlay(){
+  document.getElementById('searchOverlay').classList.remove('open');
+  document.getElementById('overlaySearchInput').value='';
+  document.getElementById('searchInput').value='';
+  st.search='';
+  fetchCards();
+}
+function onOverlaySearch(){
+  const val = document.getElementById('overlaySearchInput').value;
   document.getElementById('searchInput').value = val;
   onSearch();
 }
