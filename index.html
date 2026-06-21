@@ -48,7 +48,15 @@ body::before{display:none;}
 .hdr-btn:hover{color:#e8c56d;}
 .hdr-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
 .hdr-lang{font-size:11px;font-weight:700;letter-spacing:.06em;border:1px solid rgba(255,255,255,.25);padding:4px 8px;border-radius:6px;}
-@media(max-width:480px){.hdr-premium span{display:none;}.hdr-user span{display:none;}.hdr-lang{display:none;}.header-inner{gap:4px;padding:0;}.logo svg{display:none;}.logo img{width:24px;height:24px;}.game-switch{gap:1px;}.game-btn{padding:4px 7px;font-size:10px;}.search-wrap{min-width:0;}.hdr-btn{padding:4px;}.hdr-btn svg{width:18px;height:18px;}}
+@media(max-width:480px){.hdr-premium span{display:none;}.hdr-user span{display:none;}.hdr-lang{display:none;}.search-wrap{display:none;}}
+
+.mobile-search-bar{display:none;background:#1a1a2e;padding:8px 12px 10px;}
+.mobile-search-bar .search-wrap{position:relative;}
+.mobile-search-bar .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.4);font-size:13px;}
+.mobile-search-bar .search-input{width:100%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:24px;padding:9px 16px 9px 36px;color:#fff;font-size:15px;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box;-webkit-text-fill-color:#fff;}
+.mobile-search-bar .search-input::placeholder{color:rgba(255,255,255,.4);}
+.mobile-search-bar .search-input:focus{border-color:rgba(232,197,109,.5);background:rgba(255,255,255,.15);}
+@media(max-width:480px){.mobile-search-bar{display:block;}}
 .hdr-premium{color:var(--gold-light) !important;opacity:1 !important;}
 .hdr-premium svg{stroke:var(--gold-light);fill:var(--gold-light);}
 .hdr-premium span{font-size:11px;font-weight:700;letter-spacing:.03em;}
@@ -366,6 +374,14 @@ body::before{display:none;}
       <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
       <span id="userBtnLabel">Connexion</span>
     </button>
+  </div>
+</div>
+
+<!-- MOBILE SEARCH BAR -->
+<div class="mobile-search-bar" id="mobileSearchBar">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" type="text" placeholder="Chercher une carte..." id="mobileSearchInput" oninput="onMobileSearch()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
   </div>
 </div>
 
@@ -1778,6 +1794,8 @@ function applyLang(){
   const tagline = document.getElementById('taglineText');
   if(tagline) tagline.textContent = l === 'fr' ? 'Ton compagnon TCG' : 'Your TCG companion';
   document.getElementById('searchInput').placeholder = t('search');
+  const mob = document.getElementById('mobileSearchInput');
+  if(mob) mob.placeholder = t('search');
   // Nav labels
   const navLabels = document.querySelectorAll('.nav-label:not(#navLangLabel)');
   const navKeys = ['navCards','navCollection','navWishlist','navProfil'];
@@ -1872,6 +1890,12 @@ function applyLang(){
   }catch(e){console.warn('applyLang error:',e);}
 }
 
+function onMobileSearch(){
+  const val = document.getElementById('mobileSearchInput').value;
+  document.getElementById('searchInput').value = val;
+  onSearch();
+}
+
 function toggleLang(){
   currentLang = currentLang === 'fr' ? 'en' : 'fr';
   localStorage.setItem('nakama_lang', currentLang);
@@ -1885,6 +1909,8 @@ const HERO_IMAGE_URL = 'https://raw.githubusercontent.com/Marchisko/onepieceitem
 if(HERO_IMAGE_URL !== 'YOUR_IMAGE_URL_HERE'){const hi=document.getElementById('heroImg');if(hi)hi.src=HERO_IMAGE_URL;}
 
 document.getElementById('searchInput').value='';
+const mobInp = document.getElementById('mobileSearchInput');
+if(mobInp) mobInp.value='';
 st.search='';
 buildFilters();
 fetchCards();
