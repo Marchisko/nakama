@@ -2424,9 +2424,9 @@ async function purchasePlan(plan) {
 
   // Map plan vers product ID RevenueCat
   const productIds = {
-    weekly: 'lifetime',
-    monthly: 'yearly',
-    annual: 'monthly'
+    weekly: 'nakama_premium_weekly',
+    monthly: 'nakama_premium_annual',
+    annual: 'nakama_premium_monthly'
   };
 
   const productId = productIds[plan];
