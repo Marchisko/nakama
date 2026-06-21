@@ -41,7 +41,7 @@ body::before{display:none;}
 .game-btn.active{background:#fff;color:#1a1a2e;}
 .search-wrap{flex:1;position:relative;}
 .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.4);font-size:13px;}
-.search-input{width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:8px 16px 8px 34px;color:#fff;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s,background .2s;}
+.search-input{width:100%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:24px;padding:8px 16px 8px 34px;color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s,background .2s;-webkit-text-fill-color:#fff;}
 .search-input:focus{border-color:rgba(232,197,109,.5);background:rgba(255,255,255,.12);}
 .search-input::placeholder{color:rgba(255,255,255,.35);}
 .hdr-btn{background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;display:flex;align-items:center;gap:5px;padding:4px 6px;border-radius:8px;transition:color .2s;flex-shrink:0;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;}
@@ -2434,7 +2434,7 @@ async function purchasePlan(plan) {
 
   // Sur web — ouvrir Stripe via RevenueCat Billing
   // L'URL de checkout RevenueCat Billing
-  const checkoutUrl = `https://billing.revenuecat.com/checkout?product=${productId}&app_user_id=${currentUser.id}&api_key=${RC_API_KEY}`;
+  const checkoutUrl = `https://billing.revenuecat.com/${RC_API_KEY}/subscribe?app_user_id=${encodeURIComponent(currentUser.id)}&product=${productId}`;
 
   // Ouvrir dans une popup ou rediriger
   const popup = window.open(checkoutUrl, 'nakama_checkout', 'width=500,height=700,scrollbars=yes');
