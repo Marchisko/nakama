@@ -1535,6 +1535,10 @@ async function renderProfilPage(){
     else if(!currentUser) { teaser.style.display = ''; teaser.querySelector('.premium-teaser-title').textContent = 'Débloquez tout le potentiel'; teaser.querySelector('.premium-teaser-sub').textContent = 'Crée un compte gratuit pour commencer'; }
     else { teaser.style.display = ''; }
   }
+
+  // Sections Premium Profil
+  await renderTopMovers();
+  await renderPriceChart();
 }
 
 function premiumLockBlock(el, fakeContent) {
