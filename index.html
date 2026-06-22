@@ -1993,8 +1993,14 @@ sbClient.auth.onAuthStateChange(async (event, session) => {
   if(currentUser) await initRevenueCat();
   updateUserBtn();
   if (currentUser) {
+    closeAuth();
     await loadFromSupabase();
     checkMigrateBanner();
+    renderCollectionPage();
+    renderWishlistPage();
+  } else {
+    renderCollectionPage();
+    renderWishlistPage();
   }
 });
 
