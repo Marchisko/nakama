@@ -2097,15 +2097,29 @@ async function submitAuth() {
     }
     if (result.error) {
       errEl.textContent = result.error.message;
+      btn.disabled = false;
+      btn.textContent = authMode === 'login' ? 'Se connecter' : "S'inscrire";
     } else {
-      closeAuth();
-      showToast(authMode === 'login' ? '✓ Connecté !' : '✓ Compte créé !');
+      // Forcer la mise à jour immédiate sans attendre onAuthStateChange
+      if(result.data?.session?.user) {
+        currentUser = result.data.session.user;
+        await fetchPremiumStatus();
+        updateUserBtn();
+        closeAuth();
+        showToast('✓ Connecté !');
+        await loadFromSupabase();
+        renderCollectionPage();
+        renderWishlistPage();
+      } else {
+        closeAuth();
+        showToast('✓ Compte créé ! Vérifie ton email.');
+      }
     }
   } catch(e) {
     errEl.textContent = 'Erreur réseau';
+    btn.disabled = false;
+    btn.textContent = authMode === 'login' ? 'Se connecter' : "S'inscrire";
   }
-  btn.disabled = false;
-  btn.textContent = authMode === 'login' ? 'Se connecter' : "S'inscrire";
 }
 
 // ===== SUPABASE COLLECTION SYNC =====
