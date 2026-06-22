@@ -1873,7 +1873,7 @@ function applyLang(){
   if(authTabs[1]) authTabs[1].textContent = t('authSignup');
   // Connexion btn
   const userBtnLabel = document.getElementById('userBtnLabel');
-  if(userBtnLabel && typeof currentUser === 'undefined' || !currentUser) { if(userBtnLabel) userBtnLabel.textContent = t('connexion'); }
+  if(userBtnLabel && !currentUser) { userBtnLabel.textContent = t('connexion'); }
   // Profil page
   const rarityTitle = document.querySelector('#pageProfil .pc-title');
   // Migrate
