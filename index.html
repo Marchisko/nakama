@@ -1991,7 +1991,6 @@ async function fetchPremiumStatus() {
 sbClient.auth.onAuthStateChange(async (event, session) => {
   currentUser = session?.user || null;
   await fetchPremiumStatus();
-  if(currentUser) await initRevenueCat();
   updateUserBtn();
   if (currentUser) {
     closeAuth();
@@ -2010,7 +2009,6 @@ sbClient.auth.onAuthStateChange(async (event, session) => {
   const { data: { session } } = await sbClient.auth.getSession();
   currentUser = session?.user || null;
   await fetchPremiumStatus();
-  if(currentUser) await initRevenueCat();
   updateUserBtn();
   if (currentUser) {
     await loadFromSupabase();
