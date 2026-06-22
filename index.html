@@ -1806,6 +1806,7 @@ function t(key, ...args){
 }
 
 function applyLang(){
+  if(typeof authMode === 'undefined') return;
   try{
   const l = currentLang;
   document.getElementById('langBtn').textContent = l === 'fr' ? 'EN' : 'FR';
@@ -1950,7 +1951,6 @@ function toggleLang(){
   fetchCards();
 }
 
-if(typeof authMode === 'undefined') var authMode = 'login';
 applyLang();
 const HERO_IMAGE_URL = 'https://raw.githubusercontent.com/Marchisko/onepieceitem/main/hero.png';
 if(HERO_IMAGE_URL !== 'YOUR_IMAGE_URL_HERE'){const hi=document.getElementById('heroImg');if(hi)hi.src=HERO_IMAGE_URL;}
