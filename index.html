@@ -1988,20 +1988,20 @@ async function fetchPremiumStatus() {
 }
 
 // Init auth state
-sbClient.auth.onAuthStateChange(async (event, session) => {
+sbClient.auth.onAuthStateChange((event, session) => {
   currentUser = session?.user || null;
-  await fetchPremiumStatus();
   updateUserBtn();
-  if (currentUser) {
-    closeAuth();
-    await loadFromSupabase();
-    checkMigrateBanner();
+  closeAuth();
+  // Async en arrière-plan, sans bloquer
+  (async () => {
+    await fetchPremiumStatus();
+    if (currentUser) {
+      await loadFromSupabase();
+      checkMigrateBanner();
+    }
     renderCollectionPage();
     renderWishlistPage();
-  } else {
-    renderCollectionPage();
-    renderWishlistPage();
-  }
+  })();
 });
 
 // Check session on load
@@ -2096,15 +2096,15 @@ async function submitAuth() {
     }
     if (result.error) {
       errEl.textContent = result.error.message;
-    } else {
-      closeAuth();
-      showToast(authMode === 'login' ? '✓ Connecté !' : '✓ Compte créé !');
+      btn.disabled = false;
+      btn.textContent = authMode === 'login' ? 'Se connecter' : "S'inscrire";
     }
+    // Si succès : onAuthStateChange gère tout (closeAuth, render, etc.)
   } catch(e) {
     errEl.textContent = 'Erreur réseau';
+    btn.disabled = false;
+    btn.textContent = authMode === 'login' ? 'Se connecter' : "S'inscrire";
   }
-  btn.disabled = false;
-  btn.textContent = authMode === 'login' ? 'Se connecter' : "S'inscrire";
 }
 
 // ===== SUPABASE COLLECTION SYNC =====
