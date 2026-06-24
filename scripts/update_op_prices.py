@@ -61,14 +61,21 @@ def safe_get(url):
 def get_prices(card_id, name):
     base = card_id.split('_')[0]
     keyword = 'Alternate Art' if '_p' in card_id else ''
-    query = f"{name} {keyword} {base} One Piece Card Game".strip()
-    data = safe_get(f"https://www.pricecharting.com/api/products?q={requests.utils.quote(query)}&t={PC_TOKEN}&status=price")
-    if not data: return None
-    products = data.get('products', [])
-    if not products: return None
+    base_query = f"{name} {keyword} {base} One Piece Card Game".strip()
 
-    en_prod = next((p for p in products if 'Japanese' not in p.get('console-name','')), None)
-    jp_prod = next((p for p in products if 'Japanese' in p.get('console-name','')), None)
+    # Query EN
+    data_en = safe_get(f"https://www.pricecharting.com/api/products?q={requests.utils.quote(base_query)}&t={PC_TOKEN}&status=price")
+    en_products = data_en.get('products', []) if data_en else []
+    en_prod = next((p for p in en_products if 'Japanese' not in p.get('console-name','')), None)
+
+    # Query JP — recherche explicitement la version japonaise
+    jp_query = f"{name} {keyword} {base} One Piece Card Game Japanese".strip()
+    data_jp = safe_get(f"https://www.pricecharting.com/api/products?q={requests.utils.quote(jp_query)}&t={PC_TOKEN}&status=price")
+    jp_products = data_jp.get('products', []) if data_jp else []
+    jp_prod = next((p for p in jp_products if 'Japanese' in p.get('console-name','')), None)
+    # Fallback: chercher dans les résultats EN aussi
+    if not jp_prod:
+        jp_prod = next((p for p in en_products if 'Japanese' in p.get('console-name','')), None)
 
     result = {}
     for key, prod in [('en', en_prod), ('jp', jp_prod)]:
