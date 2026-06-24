@@ -1999,6 +1999,7 @@ sbClient.auth.onAuthStateChange((event, session) => {
   // Async en arrière-plan, sans bloquer
   (async () => {
     await fetchPremiumStatus();
+    updateUserBtn();
     if (currentUser) {
       await loadFromSupabase();
       checkMigrateBanner();
@@ -2018,13 +2019,17 @@ sbClient.auth.onAuthStateChange((event, session) => {
     await loadFromSupabase();
     checkMigrateBanner();
   }
+  // Re-render après résolution du statut premium
+  renderCollectionPage();
+  renderWishlistPage();
 })();
 
 function updateUserBtn() {
   const label = document.getElementById('userBtnLabel');
   if (currentUser) {
     const email = currentUser.email.split('@')[0];
-    label.textContent = email.length > 10 ? email.slice(0,10)+'…' : email;
+    const truncated = email.length > 10 ? email.slice(0,10)+'…' : email;
+    label.textContent = isPremium ? '✦ ' + truncated : truncated;
   } else {
     label.textContent = t('connexion');
   }
