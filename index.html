@@ -1370,6 +1370,18 @@ async function renderCollectionPage(){
   document.getElementById('portfolioValuePK').textContent = pk.value>0 ? `${pk.value.toFixed(2)} €` : '— €';
   document.getElementById('portfolioSubPK').textContent = pk.priced>0 ? `${pk.priced} carte${pk.priced>1?'s':''} évaluée${pk.priced>1?'s':''}` : `${pk.unique||0} cartes · valeur non disponible`;
 
+  // Cacher les overlays premium immédiatement si premium
+  if(isPremium) {
+    const topMoversOverlay = document.getElementById('topMoversOverlay');
+    const priceChartOverlay = document.getElementById('priceChartOverlay');
+    const topMoversBlur = document.getElementById('topMoversBlur');
+    const priceChartBlur = document.getElementById('priceChartBlur');
+    if(topMoversOverlay) topMoversOverlay.style.display = 'none';
+    if(priceChartOverlay) priceChartOverlay.style.display = 'none';
+    if(topMoversBlur) { topMoversBlur.style.filter = 'none'; topMoversBlur.style.pointerEvents = ''; }
+    if(priceChartBlur) { priceChartBlur.style.filter = 'none'; priceChartBlur.style.pointerEvents = ''; }
+  }
+
   // Afficher le vrai contenu Premium si connecté et Premium
   const premiumBlock = document.getElementById('collPremiumBlock');
   if(premiumBlock) {
