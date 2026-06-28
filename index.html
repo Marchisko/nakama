@@ -1193,10 +1193,22 @@ function updateCmLink(c){
   const card = c || currentCard;
   if(!card) return;
   if(currentGame === 'pokemon'){
-    const name = encodeURIComponent(card.name||'');
-    document.getElementById('cmLink').href = `https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=${name}`;
+    // Build direct Cardmarket URL: /Singles/{Set-Name}/{Card-Name}
+    const setName = PK_SET_NAMES[card.set_id] || card.set_id || '';
+    const cmSet = setName.replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-|-$/g,'');
+    const cmName = (card.name||'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-|-$/g,'');
+    if(cmSet && cmName){
+      document.getElementById('cmLink').href = `https://www.cardmarket.com/en/Pokemon/Products/Singles/${cmSet}/${cmName}`;
+    } else {
+      // Fallback: search with name + set number
+      const cardNum = card.id ? card.id.split('-').pop() : '';
+      const q = encodeURIComponent(`${card.name||''} ${cardNum}`.trim());
+      document.getElementById('cmLink').href = `https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=${q}&exactMatch=true`;
+    }
   } else {
-    document.getElementById('cmLink').href = 'https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=' + encodeURIComponent(card.name||'');
+    // One Piece: search with card ID (ex: OP01-001) for precision
+    const q = encodeURIComponent(`${card.name||''} ${card.id||''}`.trim());
+    document.getElementById('cmLink').href = 'https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=' + q;
   }
 }
 function setEdition(ed){
@@ -1430,7 +1442,7 @@ function renderWishlistPage(){
       <div class="list-info">
         <div class="list-name">${item.card.name||'—'}</div>
         <div class="list-meta">${item.card.set_id||''} · ${RARITY_LABELS[item.card.rarity]||item.card.rarity||''}</div>
-        <a class="wish-cm-btn" href="https://www.cardmarket.com/en/${(item.card.game||'onepiece')==='pokemon'?'Pokemon':'OnePiece'}/Products/Search?searchString=${encodeURIComponent(item.card.name||'')}" target="_blank" onclick="event.stopPropagation()">🔗 Cardmarket</a>
+        <a class="wish-cm-btn" href="${(()=>{const g=item.card.game||'onepiece';if(g==='pokemon'){const sn=(PK_SET_NAMES[item.card.set_id]||item.card.set_id||'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-|-$/g,'');const cn=(item.card.name||'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-|-$/g,'');if(sn&&cn)return'https://www.cardmarket.com/en/Pokemon/Products/Singles/'+sn+'/'+cn;return'https://www.cardmarket.com/en/Pokemon/Products/Search?searchString='+encodeURIComponent((item.card.name||'')+' '+(item.card.id||'').split('-').pop());}return'https://www.cardmarket.com/en/OnePiece/Products/Search?searchString='+encodeURIComponent((item.card.name||'')+' '+(item.card.id||''));})()}" target="_blank" onclick="event.stopPropagation()">🔗 Cardmarket</a>
       </div>
       <button class="list-remove" onclick="removeWish(event,'${item.card.id}')">🗑</button>
     </div>`).join('');
