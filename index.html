@@ -2130,8 +2130,19 @@ async function submitAuth() {
       errEl.textContent = result.error.message;
       btn.disabled = false;
       btn.textContent = authMode === 'login' ? 'Se connecter' : "S'inscrire";
+      return;
     }
-    // Si succès : onAuthStateChange gère tout (closeAuth, render, etc.)
+    // Cas signup avec confirmation email activée : signUp réussit mais sans session active.
+    // onAuthStateChange ne se déclenche pas, donc on gère ce cas explicitement.
+    if (authMode === 'signup' && !result.data?.session) {
+      errEl.style.color = 'var(--green)';
+      errEl.textContent = '✓ Compte créé ! Vérifie ta boîte mail pour confirmer ton inscription.';
+      btn.disabled = false;
+      btn.textContent = "S'inscrire";
+      return;
+    }
+    // Si succès avec session (login, ou signup sans confirmation email requise) :
+    // onAuthStateChange gère tout (closeAuth, render, etc.)
   } catch(e) {
     errEl.textContent = 'Erreur réseau';
     btn.disabled = false;
