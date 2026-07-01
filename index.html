@@ -804,7 +804,7 @@ body::before{display:none;}
     <div class="auth-logo">
       <svg viewBox="0 0 200 44" height="44" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto;">
         <text x="100" y="28" font-family="Georgia,serif" font-size="24" font-weight="700" fill="#1a1a2e" text-anchor="middle" letter-spacing="4">NAKAMA</text>
-        <text x="100" y="40" font-family="Georgia,serif" font-size="7" fill="rgba(201,168,76,0.8)" text-anchor="middle" letter-spacing="2.5">TON COMPAGNON TCG</text>
+        <text x="100" y="40" id="authTaglineSvg" font-family="Georgia,serif" font-size="7" fill="rgba(201,168,76,0.8)" text-anchor="middle" letter-spacing="2.5">TON COMPAGNON TCG</text>
       </svg>
     </div>
     <div class="auth-sub" id="authSubText">Synchronise ta collection sur tous tes appareils</div>
@@ -1868,6 +1868,8 @@ function applyLang(){
   _sa('authPasswordLabel', t('authPassword'));
   _sa('authSkipBtn', t('authSkip'));
   _sa('authSubText', t('authSub'));
+  const authTaglineSvgEl = document.getElementById('authTaglineSvg');
+  if(authTaglineSvgEl) authTaglineSvgEl.textContent = l === 'fr' ? 'TON COMPAGNON TCG' : 'YOUR TCG COMPANION';
   _sa('authGoogleBtnText', t('authGoogleBtn'));
   _sa('authDividerText', t('authDivider'));
   _sa('forgotBtn', t('authForgot'));
@@ -3018,7 +3020,7 @@ splash.style.cssText=`position:fixed;inset:0;z-index:999;background:#1a1a2e;disp
 splash.innerHTML=`
   <div style="text-align:center;">
     <div style="font-family:Georgia,serif;font-size:28px;font-weight:700;color:#fff;letter-spacing:8px;">NAKAMA</div>
-    <div style="font-family:Georgia,serif;font-size:9px;color:rgba(232,197,109,0.75);letter-spacing:3.5px;margin-top:8px;">TON COMPAGNON TCG</div>
+    <div style="font-family:Georgia,serif;font-size:9px;color:rgba(232,197,109,0.75);letter-spacing:3.5px;margin-top:8px;">${currentLang==='fr'?'TON COMPAGNON TCG':'YOUR TCG COMPANION'}</div>
     <div style="width:0px;height:1px;background:#e8c56d;margin:18px auto 0;animation:splashBar 1.2s ease forwards;opacity:0.6;"></div>
   </div>
   <style>@keyframes splashBar{from{width:0;opacity:0}to{width:100px;opacity:.6}}</style>`;
