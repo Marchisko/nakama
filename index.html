@@ -330,7 +330,9 @@ body::before{display:none;}
 .focus-ring{position:absolute;width:60px;height:60px;border:2px solid #fff;border-radius:8px;pointer-events:none;opacity:0;transition:opacity .3s;transform:translate(-50%,-50%);}
 .auth-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.4);backdrop-filter:blur(8px);justify-content:center;align-items:center;padding:20px;}
 .auth-overlay.open{display:flex;}
-.auth-box{background:var(--bg2);border:1px solid var(--border);border-radius:24px;padding:32px 24px;width:100%;max-width:380px;overflow-y:auto;max-height:90vh;}
+.auth-box{background:var(--bg2);border:1px solid var(--border);border-radius:24px;padding:32px 24px;width:100%;max-width:380px;overflow-y:auto;max-height:90vh;position:relative;}
+.auth-close-x{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.06);border:none;color:var(--text-dim);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;transition:background .2s;}
+.auth-close-x:hover{background:rgba(0,0,0,.12);color:var(--text);}
 .auth-logo{font-size:22px;font-weight:700;color:var(--navy);text-align:center;margin-bottom:4px;}
 .auth-logo span{color:var(--gold);}
 .auth-sub{font-size:12px;color:var(--text-dim);text-align:center;margin-bottom:24px;}
@@ -796,8 +798,9 @@ body::before{display:none;}
 <div class="toast" id="toast"></div>
 
 <!-- AUTH -->
-<div class="auth-overlay" id="authOverlay">
+<div class="auth-overlay" id="authOverlay" onclick="if(event.target===this)closeAuth()">
   <div class="auth-box">
+    <button class="auth-close-x" id="authCloseX" onclick="closeAuth()" aria-label="Fermer">✕</button>
     <div class="auth-logo">
       <svg viewBox="0 0 200 44" height="44" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto;">
         <text x="100" y="28" font-family="Georgia,serif" font-size="24" font-weight="700" fill="#1a1a2e" text-anchor="middle" letter-spacing="4">NAKAMA</text>
@@ -816,9 +819,9 @@ body::before{display:none;}
         <path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 0 1 3.67 9c0-.59.1-1.17.28-1.7V4.97H.95A9 9 0 0 0 0 9c0 1.45.35 2.83.95 4.03l3-2.33z"/>
         <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .95 4.97l3 2.33C4.66 5.17 6.65 3.58 9 3.58z"/>
       </svg>
-      Continuer avec Google
+      <span id="authGoogleBtnText">Continuer avec Google</span>
     </button>
-    <div class="auth-divider">ou</div>
+    <div class="auth-divider" id="authDividerText">ou</div>
     <div class="auth-field">
       <label class="auth-label">Email</label>
       <input class="auth-input" type="email" id="authEmail" placeholder="ton@email.com">
@@ -1796,6 +1799,8 @@ const i18n = {
     authEmail: 'Email', authPassword: 'Mot de passe',
     authSubmitLogin: 'Se connecter', authSubmitSignup: 'Créer un compte',
     authSkip: 'Continuer sans compte',
+    authGoogleBtn: 'Continuer avec Google', authDivider: 'ou',
+    authForgot: 'Mot de passe oublié ?', authEmailPlaceholder: 'ton@email.com',
     toastAdded: 'Ajouté à la collection', toastRemoved: 'Retiré de la collection',
     toastWished: 'Ajouté à la wishlist', toastUnwished: 'Retiré de la wishlist',
     loading: 'Chargement...', cardsShown: (t,s)=>`${t.toLocaleString()} cartes · ${s} affichées`,
@@ -1828,6 +1833,8 @@ const i18n = {
     authEmail: 'Email', authPassword: 'Password',
     authSubmitLogin: 'Sign in', authSubmitSignup: 'Create account',
     authSkip: 'Continue without account',
+    authGoogleBtn: 'Continue with Google', authDivider: 'or',
+    authForgot: 'Forgot password?', authEmailPlaceholder: 'your@email.com',
     toastAdded: 'Added to collection', toastRemoved: 'Removed from collection',
     toastWished: 'Added to wishlist', toastUnwished: 'Removed from wishlist',
     loading: 'Loading...', cardsShown: (t,s)=>`${t.toLocaleString()} cards · ${s} shown`,
@@ -1861,6 +1868,11 @@ function applyLang(){
   _sa('authPasswordLabel', t('authPassword'));
   _sa('authSkipBtn', t('authSkip'));
   _sa('authSubText', t('authSub'));
+  _sa('authGoogleBtnText', t('authGoogleBtn'));
+  _sa('authDividerText', t('authDivider'));
+  _sa('forgotBtn', t('authForgot'));
+  const authEmailEl = document.getElementById('authEmail');
+  if(authEmailEl) authEmailEl.placeholder = t('authEmailPlaceholder');
   const authSubmitEl = document.getElementById('authSubmit');
   if(authSubmitEl) authSubmitEl.textContent = authMode === 'login' ? t('authSubmitLogin') : t('authSubmitSignup');
   // Edition button
